@@ -1,0 +1,90 @@
+"use client"
+
+import { createApartamento } from "@/lib/actions"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectItem } from "@/components/ui/select"
+import { redirect } from "next/navigation"
+
+export default function NuevoApartamentoPage() {
+  async function handleSubmit(formData: FormData) {
+    const result = await createApartamento({
+      numero: formData.get("numero") as string,
+      torre: formData.get("torre") as string,
+      nivel: parseInt(formData.get("nivel") as string),
+      estado: formData.get("estado") as "PROPIO" | "ARRIENDO" | "VACIO",
+      observaciones: (formData.get("observaciones") as string) || undefined,
+      habitantes: parseInt(formData.get("habitantes") as string) || 0,
+      clienteId: "cliente_default_001",
+    })
+
+    if (result.success) {
+      redirect("/apartamentos")
+    }
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <h1 className="text-2xl font-bold text-gray-900">Nuevo Apartamento</h1>
+
+      <Card>
+        <CardContent className="pt-6">
+          <form action={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="torre">Torre</Label>
+                <Input id="torre" name="torre" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="numero">N&uacute;mero</Label>
+                <Input id="numero" name="numero" required />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nivel">Nivel</Label>
+                <Input id="nivel" name="nivel" type="number" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="estado">Estado</Label>
+                <Select name="estado" required>
+                  <SelectItem value="PROPIO">Propio</SelectItem>
+                  <SelectItem value="ARRIENDO">Arriendo</SelectItem>
+                  <SelectItem value="VACIO">Vac&iacute;o</SelectItem>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="habitantes">Habitantes</Label>
+                <Input
+                  id="habitantes"
+                  name="habitantes"
+                  type="number"
+                  min="0"
+                  defaultValue="0"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="observaciones">Observaciones</Label>
+              <Input id="observaciones" name="observaciones" />
+            </div>
+
+            <div className="flex gap-4">
+              <Button type="submit">Crear Apartamento</Button>
+              <Button variant="outline" type="button" onClick={() => history.back()}>
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
