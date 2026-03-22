@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -18,8 +18,13 @@ model User {
   role          Role      @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  clienteId     String?
+
   accounts      Account[]
   sessions      Session[]
+  cliente       Cliente?  @relation(fields: [clienteId], references: [id])
+
+  @@index([clienteId])
 }
 
 enum Role {
@@ -60,4 +65,234 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum EstadoApartamento {
+  PROPIO
+  ARRIENDO
+  VACIO
+}
+
+enum RolPersona {
+  PROPIETARIO
+  APODERADO
+  RESIDENTE
+}
+
+enum EstadoAsamblea {
+  ABIERTA
+  CERRADA
+}
+
+enum TipoParticipante {
+  PROPIETARIO
+  APODERADO
+}
+
+enum EstadoEncuesta {
+  ACTIVA
+  CERRADA
+}
+
+enum TipoEncuesta {
+  BINARIA
+  MULTIPLE
+}
+
+enum TipoPQRS {
+  PREGUNTA
+  QUEJA
+  RECLAMO
+  SUGERENCIA
+}
+
+model Cliente {
+  id        String   @id @default(cuid())
+  nombre    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  apartamentos Apartamento[]
+  personas     Persona[]
+  asambleas    Asamblea[]
+  comunicados  Comunicado[]
+  users        User[]
+}
+
+model Apartamento {
+  id            String             @id @default(cuid())
+  numero        String
+  torre         String
+  nivel         Int
+  estado        EstadoApartamento  @default(PROPIO)
+  observaciones String?
+  habitantes    Int                @default(0)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  clienteId     String
+  deletedAt     DateTime?
+
+  cliente                Cliente               @relation(fields: [clienteId], references: [id])
+  personasApartamentos   PersonaApartamento[]
+  participantesAsambleas ParticipanteAsamblea[]
+  votos                  Voto[]
+  pqrs                   PQRS[]
+
+  @@unique([numero, torre, clienteId])
+  @@index([clienteId])
+  @@index([estado])
+}
+
+model Persona {
+  id        String    @id @default(cuid())
+  nombre    String
+  cedula    String
+  telefono  String?
+  email     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  clienteId String
+  deletedAt DateTime?
+
+  cliente                Cliente               @relation(fields: [clienteId], references: [id])
+  personasApartamentos   PersonaApartamento[]
+  participantesAsambleas ParticipanteAsamblea[]
+
+  @@unique([cedula, clienteId])
+  @@index([clienteId])
+}
+
+model PersonaApartamento {
+  id            String      @id @default(cuid())
+  rol           RolPersona
+  estadoActivo  Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  personaId     String
+  apartamentoId String
+
+  persona     Persona     @relation(fields: [personaId], references: [id])
+  apartamento Apartamento @relation(fields: [apartamentoId], references: [id])
+
+  @@unique([personaId, apartamentoId])
+  @@index([apartamentoId])
+  @@index([personaId])
+}
+
+model Asamblea {
+  id        String         @id @default(cuid())
+  titulo    String
+  fecha     DateTime
+  estado    EstadoAsamblea @default(ABIERTA)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  clienteId String
+  deletedAt DateTime?
+
+  cliente      Cliente               @relation(fields: [clienteId], references: [id])
+  encuestas    Encuesta[]
+  participantes ParticipanteAsamblea[]
+
+  @@index([clienteId])
+  @@index([estado])
+}
+
+model ParticipanteAsamblea {
+  id            String           @id @default(cuid())
+  tipo          TipoParticipante
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  asambleaId    String
+  apartamentoId String
+  personaId     String
+
+  asamblea   Asamblea    @relation(fields: [asambleaId], references: [id])
+  apartamento Apartamento @relation(fields: [apartamentoId], references: [id])
+  persona    Persona     @relation(fields: [personaId], references: [id])
+
+  @@unique([asambleaId, apartamentoId])
+  @@index([asambleaId])
+}
+
+model Encuesta {
+  id        String         @id @default(cuid())
+  pregunta  String
+  orden     Int            @default(0)
+  estado    EstadoEncuesta @default(ACTIVA)
+  tipo      TipoEncuesta  @default(MULTIPLE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  asambleaId String
+  deletedAt DateTime?
+
+  asamblea Asamblea @relation(fields: [asambleaId], references: [id])
+  opciones Opcion[]
+  votos    Voto[]
+
+  @@index([asambleaId])
+  @@index([estado])
+}
+
+model Opcion {
+  id        String   @id @default(cuid())
+  texto     String
+  orden     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  encuestaId String
+
+  encuesta Encuesta @relation(fields: [encuestaId], references: [id])
+  votos    Voto[]
+
+  @@index([encuestaId])
+}
+
+model Voto {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  apartamentoId String
+  opcionId      String
+  encuestaId    String
+  deletedAt     DateTime?
+
+  apartamento Apartamento @relation(fields: [apartamentoId], references: [id])
+  opcion       Opcion      @relation(fields: [opcionId], references: [id])
+  encuesta     Encuesta    @relation(fields: [encuestaId], references: [id])
+
+  @@unique([apartamentoId, encuestaId])
+  @@index([apartamentoId])
+  @@index([encuestaId])
+  @@index([deletedAt])
+}
+
+model Comunicado {
+  id               String    @id @default(cuid())
+  titulo           String
+  contenido        String    @db.Text
+  fechaPublicacion DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  clienteId        String
+  deletedAt        DateTime?
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@index([clienteId])
+}
+
+model PQRS {
+  id           String    @id @default(cuid())
+  tipo         TipoPQRS
+  descripcion  String    @db.Text
+  email        String?
+  fecha        DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  apartamentoId String
+  deletedAt    DateTime?
+
+  apartamento Apartamento @relation(fields: [apartamentoId], references: [id])
+
+  @@index([apartamentoId])
+  @@index([tipo])
 }

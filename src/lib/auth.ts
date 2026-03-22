@@ -1,19 +1,12 @@
 import NextAuth from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import CredentialsProvider from "next-auth/providers/credentials"
+import Credentials from "next-auth/providers/credentials"
 import { PrismaClient } from "@/generated/prisma"
 
 const prisma = new PrismaClient()
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
+    Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
@@ -31,9 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        const isValid = credentials.password === user.password
-
-        if (!isValid) {
+        if (credentials.password !== user.password) {
           return null
         }
 
@@ -41,25 +32,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: user.role || "USER",
+          clienteId: user.clienteId || null,
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.role = (user as any).role
+        token.role = (user as { role?: string }).role || "USER"
+        token.clienteId = (user as { clienteId?: string | null }).clienteId
       }
       return token
     },
-    async session({ session, token }) {
+    session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.clienteId = token.clienteId as string | null
       }
       return session
     },
+  },
+  pages: {
+    signIn: "/login",
+  },
+  session: {
+    strategy: "jwt",
   },
 })
