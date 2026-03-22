@@ -1,8 +1,9 @@
 import { z } from 'zod'
 
 export const createParticipanteSchema = z.object({
-  apartamentoId: z.string().min(1, 'El apartamento es requerido'),
-  personaId: z.string().min(1, 'La persona es requerida'),
+  cedula: z.string().min(1, 'La cédula es requerida'),
+  torre: z.string().min(1, 'La torre es requerida'),
+  numero: z.string().min(1, 'El número de apartamento es requerido'),
   tipo: z.enum(['PROPIETARIO', 'APODERADO']),
 })
 

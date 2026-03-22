@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, startTransition } from 'react'
+import { useState } from 'react'
 import { createParticipante, deleteParticipante } from '@/lib/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useTransition } from 'react'
 import { Plus, Trash2, User, Building2 } from 'lucide-react'
 
 interface Participante {
@@ -29,12 +28,13 @@ export function ParticipantesSection({ asambleaId, participantes }: Props) {
     setIsPending(true)
     const result = await createParticipante({
       asambleaId,
-      apartamentoId: formData.get('apartamentoId') as string,
-      personaId: formData.get('personaId') as string,
+      cedula: formData.get('cedula') as string,
+      torre: formData.get('torre') as string,
+      numero: formData.get('numero') as string,
       tipo: formData.get('tipo') as 'PROPIETARIO' | 'APODERADO',
     })
     setIsPending(false)
-    if (result.error) {
+    if (result?.error) {
       alert(result.error)
     } else {
       setShowForm(false)
@@ -65,14 +65,18 @@ export function ParticipantesSection({ asambleaId, participantes }: Props) {
             <CardTitle className="text-base">Nuevo Participante</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={handleAdd} className="grid gap-4 md:grid-cols-3">
+            <form action={handleAdd} className="grid gap-4 md:grid-cols-4">
               <div className="space-y-2">
-                <Label>Apartamento</Label>
-                <Input name="apartamentoId" placeholder="ID del apartamento" required />
+                <Label>Cédula</Label>
+                <Input name="cedula" placeholder="Ej: 12345678" required />
               </div>
               <div className="space-y-2">
-                <Label>Persona</Label>
-                <Input name="personaId" placeholder="ID de la persona" required />
+                <Label>Torre</Label>
+                <Input name="torre" placeholder="Ej: A, 10" required maxLength={2} />
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input name="numero" placeholder="Ej: 101" required />
               </div>
               <div className="space-y-2">
                 <Label>Tipo</Label>
@@ -82,7 +86,7 @@ export function ParticipantesSection({ asambleaId, participantes }: Props) {
                   <option value="APODERADO">Apoderado</option>
                 </select>
               </div>
-              <div className="md:col-span-3 flex gap-2">
+              <div className="md:col-span-4 flex gap-2">
                 <Button type="submit" disabled={isPending}>
                   {isPending ? 'Agregando...' : 'Agregar'}
                 </Button>
