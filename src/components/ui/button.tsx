@@ -46,12 +46,16 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  formAction,
+  type,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      type={formAction ? "submit" : type || "button"}
+      formAction={formAction}
       {...props}
     />
   )
