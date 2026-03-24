@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { emitVote, getResultadosEncuesta } from '@/lib/actions/public'
+import { useEffect, useState } from 'react'
+import { emitVote, getResultadosEncuesta, getParticipationData } from '@/lib/actions/public'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -27,22 +27,31 @@ interface Resultado {
   porcentaje: number
 }
 
+interface ParticipationData {
+  totalParticipantes: number,
+  totalVotos: number,
+  totalPorcentajeParticipacion: number
+}
+
 interface EncuestaCardProps {
   encuesta: Encuesta
   apartamentoId: string
   onVoted?: () => void
+  hasVoted: () => boolean
 }
 
-export function EncuestaCard({ encuesta, apartamentoId, onVoted }: EncuestaCardProps) {
+export function EncuestaCard({ encuesta, apartamentoId, onVoted, hasVoted }: EncuestaCardProps) {
   const [selectedOpcionId, setSelectedOpcionId] = useState<string>('')
-  const [hasVoted, setHasVoted] = useState(false)
+  const [hasVotedNow, setHasVotedNow] = useState(hasVoted())
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [resultados, setResultados] = useState<Resultado[]>([])
+  const [participationData, setParticipationData] = useState<ParticipationData | null>(null)
 
   const isBinaria = encuesta.tipo === 'BINARIA'
-
+  
   const handleVotar = async () => {
+    
     if (!selectedOpcionId) {
       setError('Por favor selecciona una opción')
       return
@@ -62,13 +71,33 @@ export function EncuestaCard({ encuesta, apartamentoId, onVoted }: EncuestaCardP
       // Load results after successful vote
       const resultadosData = await getResultadosEncuesta(encuesta.id)
       setResultados(resultadosData)
-      setHasVoted(true)
+      setHasVotedNow(true)
       onVoted?.()
+
     } catch (err) {
       console.error('Error submitting vote:', err)
       setError('Error al registrar el voto. Intenta de nuevo.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleVerEncuestas = async () => {
+    setError('')
+
+    try {
+      
+      // See results
+      const resultadosData = await getResultadosEncuesta(encuesta.id)
+      setResultados(resultadosData)
+
+      const participationData = await getParticipationData(encuesta.id)
+      setParticipationData(participationData)
+    } catch (err) {
+      console.error('Error when loading results:', err)
+      setError('Error when loading results. Try again.')
+    } finally {
+      
     }
   }
 
@@ -80,13 +109,13 @@ export function EncuestaCard({ encuesta, apartamentoId, onVoted }: EncuestaCardP
             {encuesta.pregunta}
           </CardTitle>
           <Badge variant="secondary" className="shrink-0">
-            {isBinaria ? 'Sí/No' : 'Múltiple'}
+            {isBinaria ? 'Binario' : 'Múltiple'}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Options */}
-        {!hasVoted ? (
+        {hasVotedNow === false ? (
           <>
             <div className="space-y-3">
               {encuesta.opciones.map((opcion) => (
@@ -120,12 +149,68 @@ export function EncuestaCard({ encuesta, apartamentoId, onVoted }: EncuestaCardP
             >
               {isSubmitting ? 'Registrando...' : 'Votar'}
             </Button>
+            {(
+              <Button 
+                className="w-full" 
+                onClick={handleVerEncuestas}
+              >
+                Ver resultados / refrescar
+              </Button>
+            )}
+            <div className="space-y-3">
+            
+              {resultados.length > 0 && (
+                <div className="space-y-2">
+                  {resultados.map((resultado) => (
+                    <div key={resultado.id} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>{resultado.texto}</span>
+                        <span className="text-muted-foreground">
+                          {resultado.porcentaje}%
+                        </span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className="h-2 rounded-full bg-primary transition-all"
+                          style={{ width: `${resultado.porcentaje}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {resultado.votos} voto{resultado.votos !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+          {resultados.length > 0 && participationData && (
+            <div className="space-y-3">
+              <p className={`text-md font-medium ${
+                participationData.totalPorcentajeParticipacion > 50 
+                  ? 'text-green-600' 
+                  : 'text-red-600'
+              }`}>
+                ({participationData.totalVotos}/{participationData.totalParticipantes}) 
+                 {participationData.totalPorcentajeParticipacion}% de participantes han votado
+              </p>
+            </div>
+          )}
+          
           </>
         ) : (
-          /* Results after voting */
+          <>
+          {/* Results after voting */}
+         
           <div className="space-y-3">
             <p className="text-sm font-medium text-green-600">✓ Voto registrado</p>
-            
+             {(
+              <Button 
+                className="w-full" 
+                onClick={handleVerEncuestas}
+              >
+                Ver resultados / refrescar
+              </Button>
+            )}
             {resultados.length > 0 ? (
               <div className="space-y-2">
                 {resultados.map((resultado) => (
@@ -147,13 +232,26 @@ export function EncuestaCard({ encuesta, apartamentoId, onVoted }: EncuestaCardP
                     </p>
                   </div>
                 ))}
+                {participationData && (
+                <div className="space-y-3">
+                  <p className={`text-md font-medium ${
+                    participationData.totalPorcentajeParticipacion > 50 
+                      ? 'text-green-600' 
+                      : 'text-red-600'
+                  }`}>
+                    ({participationData.totalVotos}/{participationData.totalParticipantes}) 
+                    {participationData.totalPorcentajeParticipacion}% de participantes han votado
+                  </p>
+                </div>
+                )}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Cargando resultados...
+                ...
               </p>
             )}
           </div>
+          </>
         )}
       </CardContent>
     </Card>

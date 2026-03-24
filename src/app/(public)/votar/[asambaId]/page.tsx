@@ -51,6 +51,7 @@ function VotingContent({
     setPersona,
     setApartamentoActual,
     resetToApartmentSelection,
+    clear,
   } = useParticipante()
 
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
@@ -62,6 +63,7 @@ function VotingContent({
     async function loadEncuestas() {
       try {
         const data = await getEncuestasActivas(asambleaId)
+        console.log([...votosCompletados])
         setEncuestas(data)
       } catch (error) {
         console.error('Error loading encuestas:', error)
@@ -82,11 +84,27 @@ function VotingContent({
   }
 
   const handleVoted = (encuestaId: string) => {
-    setVotosCompletados((prev) => new Set([...prev, encuestaId]))
+    const internalId = state.apartamentoActual!.torre + '-' + state.apartamentoActual!.numero + '-' + encuestaId;
+    
+    // Mark this encuesta as completed for the current participant
+    setVotosCompletados((prev) => new Set([...prev, internalId]))
+    
+  }
+
+  // to know if the participant has already voted in a specific survey
+  const hasVotedInEncuesta = (encuestaId: string) => {
+    const internalId = state.apartamentoActual!.torre + '-' + state.apartamentoActual!.numero + '-' + encuestaId;
+    
+    return votosCompletados.has(internalId)
   }
 
   const handleCambiarApartamento = () => {
     resetToApartmentSelection()
+    //setVotosCompletados(new Set())
+  }
+
+  const handleChangeIdentification = () => {
+    clear()
     setVotosCompletados(new Set())
   }
 
@@ -126,6 +144,13 @@ function VotingContent({
             >
               Cambiar apartamento
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleChangeIdentification}
+            >
+              Cambiar identificación
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleVolver}>
               ← Volver
             </Button>
@@ -156,6 +181,7 @@ function VotingContent({
                 encuesta={encuesta}
                 apartamentoId={state.apartamentoActual!.id}
                 onVoted={() => handleVoted(encuesta.id)}
+                hasVoted={() => hasVotedInEncuesta(encuesta.id)}
               />
             ))}
           </div>
@@ -170,9 +196,18 @@ function VotingContent({
       <div className="container mx-auto max-w-2xl px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Votación</h1>
-          <Button variant="ghost" size="sm" onClick={handleVolver}>
-            ← Volver
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleChangeIdentification}
+            >
+              Cambiar identificación
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleVolver}>
+              ← Volver
+            </Button>
+          </div>
         </div>
 
         {/* Welcome back + apartment selection */}

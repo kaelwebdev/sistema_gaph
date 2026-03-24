@@ -62,19 +62,52 @@ export async function buscarPersonaPorCedula(cedula: string, clienteId: string) 
       },
     },
   })
-
+  
   if (!persona) {
     return null
   }
 
-  // Filter apartments that belong to the same clienteId
-  const apartamentos = persona.personasApartamentos
-    .filter((pa) => pa.apartamento.clienteId === clienteId)
-    .map((pa) => ({
-      id: pa.apartamento.id,
-      numero: pa.apartamento.numero,
-      torre: pa.apartamento.torre,
-    }))
+  const apartamentos: {
+    id: string
+    numero: string
+    torre: string
+  }[] = []
+
+    //obtain the active apartments associated with the participating person
+      const registros_participante = await prisma.participanteAsamblea.findMany({
+        where: {
+          personaId: persona.id,
+          asamblea: {
+            clienteId,
+            estado: 'ABIERTA',
+            deletedAt: null,
+          },
+        },
+        include: {
+          apartamento: {
+            select: {
+              id: true,
+              numero: true,
+              torre: true,
+            },
+          },
+        },
+      })
+
+      if (registros_participante.length === 0) {
+        return null
+      }
+      
+      // Iterate over the participant records and extract the associated apartments
+      registros_participante.forEach((p) => {
+        const apartamentoParticipante = p.apartamento
+        apartamentos.push({
+          id: apartamentoParticipante.id,
+          numero: apartamentoParticipante.numero,
+          torre: apartamentoParticipante.torre,
+        })
+      })
+
 
   return {
     id: persona.id,
@@ -198,3 +231,46 @@ export async function getResultadosEncuesta(encuestaId: string) {
     porcentaje: totalVotos > 0 ? Math.round((op._count.votos / totalVotos) * 100) : 0,
   }))
 }
+
+// Obtain the percentage of registered participants who have voted in a specific survey
+export async function getParticipationData(encuestaId: string) {
+  
+  // Obtain the assemblyId from the survey
+  const encuesta = await prisma.encuesta.findUnique({
+    where: {
+      id: encuestaId,
+    },
+    select: {
+      asambleaId: true,
+    },
+  })
+
+  if (!encuesta) {
+    return null
+  }
+
+  const [totalParticipantes, totalVotos] = await Promise.all([
+    prisma.participanteAsamblea.count({
+      where: { asambleaId: encuesta.asambleaId },
+    }),
+    prisma.voto.count({
+      where: { encuestaId, deletedAt: null },
+    })
+  ]);
+
+  // Case: Empty assembly (We avoid division by zero)
+  if (totalParticipantes === 0) {
+    return {
+      totalParticipantes: 0,
+      totalVotos: 0,
+      totalPorcentajeParticipacion: 0,
+    }
+  }
+  const result = {
+    totalParticipantes,
+    totalVotos,
+    totalPorcentajeParticipacion: Math.round((totalVotos / totalParticipantes) * 100),
+  }
+  return result
+}
+
