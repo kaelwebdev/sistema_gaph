@@ -5,6 +5,7 @@ export const createEncuestaSchema = z.object({
   orden: z.coerce.number().int().default(0),
   estado: z.enum(['ACTIVA', 'CERRADA']).default('ACTIVA'),
   tipo: z.enum(['BINARIA', 'MULTIPLE']).default('MULTIPLE'),
+  asambleaId: z.string(),
 })
 
 export const createOpcionSchema = z.object({

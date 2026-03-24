@@ -100,3 +100,23 @@ export async function deleteOpcion(id: string) {
     return { error: 'Error al eliminar la opción' }
   }
 }
+
+export async function getEncuestasPorAsambeana(asambleaId: string) {
+  try {
+    const encuestas = await prisma.encuesta.findMany({
+      where: {
+        asambleaId: asambleaId,
+        deletedAt: null,
+      },
+      include: {
+        opciones: {
+          orderBy: { orden: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+    return encuestas
+  } catch {
+    return []
+  }
+}

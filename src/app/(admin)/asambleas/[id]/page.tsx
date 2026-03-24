@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { redirect, notFound } from 'next/navigation'
+import Link from 'next/link'
+import { BarChart3 } from 'lucide-react'
 import { ParticipantesSection } from './participantes-section'
 import { EncuestasSection } from './encuestas-section'
 
@@ -41,7 +43,15 @@ export default async function AssemblyDetailPage({ params }: { params: Promise<{
             })}
           </p>
         </div>
-        <Badge className={estadoColors[data.estado]}>{data.estado}</Badge>
+        <div className="flex items-center gap-3">
+          <Link href={`/asambleas/${id}/resultados`}>
+            <Button variant="outline" size="sm">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Resultados
+            </Button>
+          </Link>
+          <Badge className={estadoColors[data.estado]}>{data.estado}</Badge>
+        </div>
       </div>
 
       <Tabs value="participantes">
