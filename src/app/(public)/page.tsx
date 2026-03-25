@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getClientes } from '@/lib/actions/public'
-import Link from 'next/link'
 
 interface Cliente {
   id: string
@@ -39,6 +38,14 @@ export default function LandingPage() {
   const handleContinuar = () => {
     if (selectedClienteId) {
       router.push(`/unidad/${selectedClienteId}`)
+    }
+  }
+
+  const handlePQRS = () => {
+    if (selectedClienteId) {
+      router.push(`/contacto?clienteId=${selectedClienteId}`)
+    } else {
+      alert('Por favor selecciona una unidad residencial primero')
     }
   }
 
@@ -102,12 +109,12 @@ export default function LandingPage() {
         </div>
 
         <div className="mt-6 text-center">
-          <Link 
-            href="/contacto" 
+          <button 
+            onClick={handlePQRS}
             className="text-sm text-gray-600 hover:text-blue-600 hover:underline"
           >
-            ¿Tienes una petición, queja o sugestão? Haz clic aquí
-          </Link>
+            ¿Tienes una petición, queja o sugerencia? Haz clic aquí
+          </button>
         </div>
       </div>
     </div>
