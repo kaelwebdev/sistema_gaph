@@ -29,6 +29,7 @@ Sistema de gestión para unidades residenciales con funcionalidades de administr
 - **Base de datos**: PostgreSQL + Prisma ORM
 - **Autenticación**: NextAuth.js (en desarrollo)
 - **Runtime**: Bun
+- **Testing**: Vitest (unit/integration) + Playwright (E2E)
 
 ## Estructura del Proyecto
 
@@ -57,6 +58,150 @@ src/
     ├── schemas/         # Validación Zod
     └── db.ts            # Cliente Prisma
 ```
+
+## Entidades y Relaciones
+
+### Modelo Entidad-Relación
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                   CLIENTE                                      │
+│  (Unidad Residencial)                                                         │
+│  id, nombre                                                                  │
+└──────────────┬────────────────────────────────────────────────────────────────┘
+               │ 1:N
+               │
+    ┌──────────┼──────────┬─────────────────────┬──────────────┐
+    │          │          │                     │              │
+    ▼          ▼          ▼                     ▼              ▼
+┌────────┐ ┌────────┐ ┌─────────────┐  ┌────────────┐ ┌──────────┐
+│ APARTA-│ │PERSONA │ │  ASAMBLEA   │  │COMUNICADO  │ │   PQRS   │
+│ MENTO  │ │        │ │             │  │            │ │          │
+├────────┤ ├────────┤ ├─────────────┤  ├────────────┤ ├──────────┤
+│ numero │ │ nombre │ │ titulo      │  │ titulo     │ │ tipo     │
+│ torre  │ │ cedula │ │ fecha       │  │ contenido  │ │ asunto   │
+│ nivel  │ │ telefo │ │ estado      │  │ fechaPub   │ │ descrip  │
+│ estado │ │ email  │ └──────┬──────┘  └────────────┘ │ estado   │
+└───┬────┘ └────┬────┘        │                        └────┬─────┘
+    │           │             │ N:1                           │
+    │           │             │                               │
+    │    ┌──────┴──────┐     │ N:1                           │ N:1
+    │    │              │     │                               │
+    ▼    ▼              ▼     ▼                               ▼
+┌─────────────────┐ ┌─────────────────────┐
+│PERSONA_APARTA- │ │  PARTICIPANTE_ASAMBLEA
+│ MENTO          │ │  (Tabla intermedia)
+├─────────────────┤ ├─────────────────────┤
+│ rol             │ │ tipo (PROPIETARIO/  │ ◄── Un representante
+│ estadoActivo   │ │       APODERADO)    │     por apartamento
+└─────────────────┘ └──────────┬──────────┘
+                               │
+                               │ 1:N
+                               ▼
+                    ┌─────────────────────┐
+                    │      ENCUESTA       │
+                    ├─────────────────────┤
+                    │ pregunta            │
+                    │ tipo (BINARIA/      │
+                    │       MULTIPLE)     │
+                    │ estado (ACTIVA/     │
+                    │       CERRADA)      │
+                    └──────────┬──────────┘
+                               │
+                               │ 1:N
+                               ▼
+                    ┌─────────────────────┐
+                    │       OPCION        │
+                    ├─────────────────────┤
+                    │ texto               │
+                    │ orden               │
+                    └──────────┬──────────┘
+                               │
+                               │ 1:N
+                               ▼
+                    ┌─────────────────────┐
+                    │        VOTO         │
+                    ├─────────────────────┤
+                    │ UNICO por:          │
+                    │ (apartamento,       │
+                    │  encuesta)          │
+                    └─────────────────────┘
+```
+
+### Descripción de Entidades
+
+| Entidad | Descripción | Atributos Principales |
+|---------|-------------|---------------------|
+| **Cliente** | Unidad residencial o conjunto | `id`, `nombre` |
+| **Apartamento** | Unidad habitacional | `numero`, `torre`, `nivel`, `estado` (PROPIO/ARRIENDO/VACIO) |
+| **Persona** | Residente o propietario | `nombre`, `cedula`, `telefono`, `email` |
+| **PersonaApartamento** | Relación Persona-Apartamento | `rol` (PROPIETARIO/APODERADO/RESIDENTE), `estadoActivo` |
+| **Asambea** | Junta de propietarios | `titulo`, `fecha`, `estado` (ABIERTA/CERRADA) |
+| **ParticipanteAsambea** | Participante registrado en asamblea | `tipo` (PROPIETARIO/APODERADO) |
+| **Encuesta** | Sondeo en una asamblea | `pregunta`, `tipo` (BINARIA/MULTIPLE), `estado` (ACTIVA/CERRADA) |
+| **Opcion** | Opción de respuesta | `texto`, `orden` |
+| **Voto** | Voto registrado | Único por (apartamento, encuesta) |
+| **Comunicado** | Anuncio publicado | `titulo`, `contenido`, `fechaPublicacion` |
+| **PQRS** | Petición/Queja/Reclamo/Sugerencia | `tipo`, `asunto`, `descripcion`, `estado` |
+
+### Enums (Valores permitidos)
+
+| Enum | Valores |
+|------|---------|
+| **EstadoApartamento** | `PROPIO`, `ARRIENDO`, `VACIO` |
+| **RolPersona** | `PROPIETARIO`, `APODERADO`, `RESIDENTE` |
+| **EstadoAsambea** | `ABIERTA`, `CERRADA` |
+| **TipoParticipante** | `PROPIETARIO`, `APODERADO` |
+| **EstadoEncuesta** | `ACTIVA`, `CERRADA` |
+| **TipoEncuesta** | `BINARIA`, `MULTIPLE` |
+| **TipoPQRS** | `PREGUNTA`, `QUEJA`, `RECLAMO`, `SUGERENCIA` |
+| **EstadoPQRS** | `PENDIENTE`, `RESUELTO`, `RECHAZADO`, `SIN_LEER` |
+| **Role** | `USER`, `ADMIN` |
+
+### Reglas de Negocio Clave
+
+1. **Un apartamento = un voto por encuesta**: La tabla `Voto` tiene índice único en `(apartamentoId, encuestaId)` para garantizar que cada apartamento vote solo una vez por pregunta.
+
+2. **Un representante por apartamento en asamblea**: La tabla `ParticipanteAsambea` tiene índice único en `(asambeaId, apartamentoId)` para que solo un representante vote por apartamento.
+
+3. **Una persona por cédula por cliente**: La tabla `Persona` tiene restricción única en `(cedula, clienteId)` para evitar duplicados.
+
+4. **Apartamento único por torre y número**: La tabla `Apartamento` tiene restricción única en `(numero, torre, clienteId)`.
+
+## Testing
+
+El proyecto cuenta con una suite completa de testing:
+
+### Tests Unitarios (Vitest) - 62 tests
+
+```bash
+bun test
+```
+
+| Carpeta | Descripción | Tests |
+|---------|-------------|-------|
+| `tests/schemas/` | Validación de Zod schemas | 39 |
+| `tests/actions/` | Server Actions mockeadas | 23 |
+
+### Tests E2E (Playwright) - 8 tests
+
+```bash
+bun run test:e2e
+```
+
+Los tests E2E cubren:
+- Login y autenticación
+- Navegación entre páginas
+- Formulario público de PQRS
+
+### Scripts de Testing
+
+| Comando | Descripción |
+|---------|-------------|
+| `bun test` | Tests unitarios (schemas + actions) |
+| `bun test:coverage` | Coverage de tests unitarios |
+| `bun run test:e2e` | Tests E2E automatizados |
+| `bun run test:e2e:ui` | Tests E2E con UI interactiva |
 
 ## Primeros Pasos
 
@@ -109,21 +254,9 @@ bun run dev
 | `bun run dev` | Iniciar servidor de desarrollo |
 | `bun run build` | Construir para producción |
 | `bun run start` | Iniciar servidor de producción |
+| `bun test` | Ejecutar tests unitarios |
+| `bun run test:e2e` | Ejecutar tests E2E |
 | `npx prisma studio` | Abrir interfaz de Prisma |
-
-## Modelos de Base de Datos
-
-- **Cliente**: Unidades residenciales
-- **Apartamento**: Unidades habitacionales con torre, número, nivel
-- **Persona**: Residentes con identificación
-- **PersonaApartamento**: Relación muchos a muchos
-- **Asambleas**: Juntas de propietarios
-- **ParticipanteAsambleas**: Participantes registrados
-- **Encuesta**: Sondeosen asamblea
-- **Opcion**: Opciones de respuesta
-- **Voto**: Votos registrados
-- **Comunicado**: Anuncios publicados
-- **PQRS**: Peticiones, quejas, reclamos, sugerencias
 
 ## Contribuir
 
