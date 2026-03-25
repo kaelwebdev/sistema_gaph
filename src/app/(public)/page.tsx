@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getClientes } from '@/lib/actions/public'
+import Link from 'next/link'
 
 interface Cliente {
   id: string
@@ -98,6 +99,15 @@ export default function LandingPage() {
           >
             Continuar
           </button>
+        </div>
+
+        <div className="mt-6 text-center">
+          <Link 
+            href="/contacto" 
+            className="text-sm text-gray-600 hover:text-blue-600 hover:underline"
+          >
+            ¿Tienes una petición, queja o sugestão? Haz clic aquí
+          </Link>
         </div>
       </div>
     </div>

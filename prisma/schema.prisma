@@ -106,6 +106,13 @@ enum TipoPQRS {
   SUGERENCIA
 }
 
+enum EstadoPQRS {
+  PENDIENTE
+  RESUELTO
+  RECHAZADO
+  SIN_LEER
+}
+
 model Cliente {
   id        String   @id @default(cuid())
   nombre    String
@@ -117,6 +124,7 @@ model Cliente {
   asambleas    Asamblea[]
   comunicados  Comunicado[]
   users        User[]
+  pqrs        PQRS[]
 }
 
 model Apartamento {
@@ -281,18 +289,27 @@ model Comunicado {
 }
 
 model PQRS {
-  id           String    @id @default(cuid())
-  tipo         TipoPQRS
-  descripcion  String    @db.Text
-  email        String?
-  fecha        DateTime  @default(now())
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  apartamentoId String
-  deletedAt    DateTime?
+  id            String      @id @default(cuid())
+  tipo          TipoPQRS
+  asunto        String
+  descripcion   String      @db.Text
+  nombreCompleto String
+  email         String
+  telefono      String
+  torre         String
+  numero        Int
+  estado        EstadoPQRS @default(SIN_LEER)
+  fecha         DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+  clienteId     String
+  apartamentoId String?
 
-  apartamento Apartamento @relation(fields: [apartamentoId], references: [id])
+  cliente    Cliente?    @relation(fields: [clienteId], references: [id])
+  apartamento Apartamento? @relation(fields: [apartamentoId], references: [id])
 
-  @@index([apartamentoId])
+  @@index([clienteId])
+  @@index([estado])
   @@index([tipo])
 }

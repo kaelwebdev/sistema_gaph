@@ -41,10 +41,12 @@ export default async function PQRSPage() {
                 )}
               </div>
               <p className="text-gray-900 mb-4 whitespace-pre-wrap">{pqrs.descripcion}</p>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Building2 className="h-4 w-4" />
-                Torre {pqrs.apartamento.torre}, Apto {pqrs.apartamento.numero}
-              </div>
+              {pqrs.apartamento && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Building2 className="h-4 w-4" />
+                  Torre {pqrs.apartamento.torre}, Apto {pqrs.apartamento.numero}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
