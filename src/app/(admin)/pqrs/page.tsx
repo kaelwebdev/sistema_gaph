@@ -1,6 +1,11 @@
-import { getPQRS } from '@/lib/actions'
+'use client'
+
+import { useState } from 'react'
+import { getPQRS, updatePQRSEstado } from '@/lib/actions'
 import { Card, CardContent } from '@/components/ui/card'
-import { Building2, Calendar } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Building2 } from 'lucide-react'
+import { revalidatePath } from 'next/cache'
 
 const tipoColors: Record<string, string> = {
   PREGUNTA: 'bg-blue-100 text-blue-800',
@@ -16,8 +21,64 @@ const tipoLabels: Record<string, string> = {
   SUGERENCIA: 'Sugerencia',
 }
 
-export default async function PQRSPage() {
-  const pqrsList = await getPQRS('cliente_default_001')
+const estadoColors: Record<string, string> = {
+  SIN_LEER: 'bg-gray-100 text-gray-800',
+  PENDIENTE: 'bg-yellow-100 text-yellow-800',
+  RESUELTO: 'bg-green-100 text-green-800',
+  RECHAZADO: 'bg-red-100 text-red-800',
+}
+
+const estadoLabels: Record<string, string> = {
+  SIN_LEER: 'Sin leer',
+  PENDIENTE: 'Pendiente',
+  RESUELTO: 'Resuelto',
+  RECHAZADO: 'Rechazado',
+}
+
+interface PQRS {
+  id: string
+  tipo: string
+  asunto: string
+  descripcion: string
+  nombreCompleto: string
+  email: string
+  telefono: string
+  torre: string
+  numero: number
+  estado: string
+  fecha: Date
+  apartamento: { torre: string; numero: number } | null
+}
+
+export default function PQRSPage() {
+  const [pqrsList, setPqrsList] = useState<PQRS[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch on mount
+  useState(() => {
+    async function loadPQRS() {
+      try {
+        const data = await getPQRS('cliente_default_001')
+        setPqrsList(data as PQRS[])
+      } catch (error) {
+        console.error('Error loading PQRS:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadPQRS()
+  })
+
+  async function handleEstadoChange(pqrsId: string, nuevoEstado: string) {
+    await updatePQRSEstado(pqrsId, nuevoEstado as any)
+    setPqrsList(prev => 
+      prev.map(p => p.id === pqrsId ? { ...p, estado: nuevoEstado } : p)
+    )
+  }
+
+  if (loading) {
+    return <div className="p-6 text-gray-500">Cargando...</div>
+  }
 
   return (
     <div className="space-y-6">
@@ -32,6 +93,9 @@ export default async function PQRSPage() {
                   <span className={`text-xs px-2 py-1 rounded ${tipoColors[pqrs.tipo]}`}>
                     {tipoLabels[pqrs.tipo]}
                   </span>
+                  <span className={`text-xs px-2 py-1 rounded ${estadoColors[pqrs.estado]}`}>
+                    {estadoLabels[pqrs.estado]}
+                  </span>
                   <span className="text-sm text-gray-500">
                     {new Date(pqrs.fecha).toLocaleDateString('es-CO')}
                   </span>
@@ -40,13 +104,39 @@ export default async function PQRSPage() {
                   <span className="text-sm text-gray-500">{pqrs.email}</span>
                 )}
               </div>
+
+              <h3 className="font-semibold text-gray-900 mb-2">{pqrs.asunto}</h3>
               <p className="text-gray-900 mb-4 whitespace-pre-wrap">{pqrs.descripcion}</p>
-              {pqrs.apartamento && (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Building2 className="h-4 w-4" />
-                  Torre {pqrs.apartamento.torre}, Apto {pqrs.apartamento.numero}
-                </div>
-              )}
+
+              <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                {pqrs.nombreCompleto && (
+                  <span>{pqrs.nombreCompleto}</span>
+                )}
+                {pqrs.telefono && (
+                  <span>{pqrs.telefono}</span>
+                )}
+                {pqrs.apartamento && (
+                  <div className="flex items-center gap-1">
+                    <Building2 className="h-4 w-4" />
+                    Torre {pqrs.apartamento.torre}, Apto {pqrs.apartamento.numero}
+                  </div>
+                )}
+              </div>
+
+              {/* Cambiar estado */}
+              <div className="flex gap-2 pt-4 border-t">
+                <span className="text-sm text-gray-500 self-center mr-2">Cambiar estado:</span>
+                {['PENDIENTE', 'RESUELTO', 'RECHAZADO'].map((estado) => (
+                  <Button
+                    key={estado}
+                    size="sm"
+                    variant={pqrs.estado === estado ? 'default' : 'outline'}
+                    onClick={() => handleEstadoChange(pqrs.id, estado)}
+                  >
+                    {estadoLabels[estado]}
+                  </Button>
+                ))}
+              </div>
             </CardContent>
           </Card>
         ))}
