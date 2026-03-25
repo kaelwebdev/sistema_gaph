@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getPQRS, updatePQRSEstado } from '@/lib/actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Building2 } from 'lucide-react'
-import { revalidatePath } from 'next/cache'
 
 const tipoColors: Record<string, string> = {
   PREGUNTA: 'bg-blue-100 text-blue-800',
@@ -55,7 +54,7 @@ export default function PQRSPage() {
   const [loading, setLoading] = useState(true)
 
   // Fetch on mount
-  useState(() => {
+  useEffect(() => {
     async function loadPQRS() {
       try {
         const data = await getPQRS('cliente_default_001')
@@ -67,7 +66,7 @@ export default function PQRSPage() {
       }
     }
     loadPQRS()
-  })
+  }, [])
 
   async function handleEstadoChange(pqrsId: string, nuevoEstado: string) {
     await updatePQRSEstado(pqrsId, nuevoEstado as any)

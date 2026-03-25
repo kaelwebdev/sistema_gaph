@@ -79,7 +79,6 @@ export async function updatePQRSEstado(id: string, estado: 'PENDIENTE' | 'RESUEL
       where: { id },
       data: { estado },
     })
-    revalidatePath('/pqrs')
     return { success: true, data: pqrs }
   } catch {
     return { error: 'Error al actualizar el estado' }
