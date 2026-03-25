@@ -63,69 +63,117 @@ src/
 
 ### Modelo Entidad-Relación
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                   CLIENTE                                      │
-│  (Unidad Residencial)                                                         │
-│  id, nombre                                                                  │
-└──────────────┬────────────────────────────────────────────────────────────────┘
-               │ 1:N
-               │
-    ┌──────────┼──────────┬─────────────────────┬──────────────┐
-    │          │          │                     │              │
-    ▼          ▼          ▼                     ▼              ▼
-┌────────┐ ┌────────┐ ┌─────────────┐  ┌────────────┐ ┌──────────┐
-│ APARTA-│ │PERSONA │ │  ASAMBLEA   │  │COMUNICADO  │ │   PQRS   │
-│ MENTO  │ │        │ │             │  │            │ │          │
-├────────┤ ├────────┤ ├─────────────┤  ├────────────┤ ├──────────┤
-│ numero │ │ nombre │ │ titulo      │  │ titulo     │ │ tipo     │
-│ torre  │ │ cedula │ │ fecha       │  │ contenido  │ │ asunto   │
-│ nivel  │ │ telefo │ │ estado      │  │ fechaPub   │ │ descrip  │
-│ estado │ │ email  │ └──────┬──────┘  └────────────┘ │ estado   │
-└───┬────┘ └────┬────┘        │                        └────┬─────┘
-    │           │             │ N:1                           │
-    │           │             │                               │
-    │    ┌──────┴──────┐     │ N:1                           │ N:1
-    │    │              │     │                               │
-    ▼    ▼              ▼     ▼                               ▼
-┌─────────────────┐ ┌─────────────────────┐
-│PERSONA_APARTA- │ │  PARTICIPANTE_ASAMBLEA
-│ MENTO          │ │  (Tabla intermedia)
-├─────────────────┤ ├─────────────────────┤
-│ rol             │ │ tipo (PROPIETARIO/  │ ◄── Un representante
-│ estadoActivo   │ │       APODERADO)    │     por apartamento
-└─────────────────┘ └──────────┬──────────┘
-                               │
-                               │ 1:N
-                               ▼
-                    ┌─────────────────────┐
-                    │      ENCUESTA       │
-                    ├─────────────────────┤
-                    │ pregunta            │
-                    │ tipo (BINARIA/      │
-                    │       MULTIPLE)     │
-                    │ estado (ACTIVA/     │
-                    │       CERRADA)      │
-                    └──────────┬──────────┘
-                               │
-                               │ 1:N
-                               ▼
-                    ┌─────────────────────┐
-                    │       OPCION        │
-                    ├─────────────────────┤
-                    │ texto               │
-                    │ orden               │
-                    └──────────┬──────────┘
-                               │
-                               │ 1:N
-                               ▼
-                    ┌─────────────────────┐
-                    │        VOTO         │
-                    ├─────────────────────┤
-                    │ UNICO por:          │
-                    │ (apartamento,       │
-                    │  encuesta)          │
-                    └─────────────────────┘
+```mermaid
+erDiagram
+    CLIENTE ||--o{ APARTAMENTO : tiene
+    CLIENTE ||--o{ PERSONA : tiene
+    CLIENTE ||--o{ ASAMBLEA : celebra
+    CLIENTE ||--o{ COMUNICADO : publica
+    CLIENTE ||--o{ PQRS : recibe
+
+    PERSONA ||--o{ PERSONA_APARTAMENTO : habita
+    APARTAMENTO ||--o{ PERSONA_APARTAMENTO : tiene
+    APARTAMENTO ||--o{ PARTICIPANTE_ASAMBLEA : representa
+    APARTAMENTO ||--o{ VOTO : emite
+    APARTAMENTO ||--o{ PQRS : registra
+
+    ASAMBLEA ||--o{ ENCUESTA : tiene
+    ASAMBLEA ||--o{ PARTICIPANTE_ASAMBLEA : tiene
+    PERSONA ||--o{ PARTICIPANTE_ASAMBLEA : participa
+
+    ENCUESTA ||--o{ OPCION : tiene
+    ENCUESTA ||--o{ VOTO : recibe
+    OPCION ||--o{ VOTO : recibe
+
+    APARTAMENTO {
+        string id PK
+        string numero
+        string torre
+        int nivel
+        EstadoApartamento estado
+        string observaciones
+        int habitantes
+        string clienteId FK
+    }
+
+    PERSONA {
+        string id PK
+        string nombre
+        string cedula
+        string telefono
+        string email
+        string clienteId FK
+    }
+
+    PERSONA_APARTAMENTO {
+        string id PK
+        RolPersona rol
+        boolean estadoActivo
+        string personaId FK
+        string apartamentoId FK
+    }
+
+    ASAMBLEA {
+        string id PK
+        string titulo
+        datetime fecha
+        EstadoAsambea estado
+        string clienteId FK
+    }
+
+    PARTICIPANTE_ASAMBLEA {
+        string id PK
+        TipoParticipante tipo
+        string asambeaId FK
+        string apartamentoId FK
+        string personaId FK
+    }
+
+    ENCUESTA {
+        string id PK
+        string pregunta
+        int orden
+        EstadoEncuesta estado
+        TipoEncuesta tipo
+        string asambeaId FK
+    }
+
+    OPCION {
+        string id PK
+        string texto
+        int orden
+        string encuestaId FK
+    }
+
+    VOTO {
+        string id PK
+        string apartamentoId FK
+        string opcionId FK
+        string encuestaId FK
+    }
+
+    COMUNICADO {
+        string id PK
+        string titulo
+        text contenido
+        datetime fechaPublicacion
+        string clienteId FK
+    }
+
+    PQRS {
+        string id PK
+        TipoPQRS tipo
+        string asunto
+        text descripcion
+        string nombreCompleto
+        string email
+        string telefono
+        string torre
+        int numero
+        EstadoPQRS estado
+        string clienteId FK
+        string apartamentoId FK
+    }
 ```
 
 ### Descripción de Entidades
