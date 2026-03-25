@@ -1,4 +1,4 @@
-import { getEncuestasPorAsambeana } from '@/lib/actions/encuestas'
+import { getEncuestasPorAsamblea } from '@/lib/actions/encuestas'
 import { getEncuestaResultados } from '@/lib/actions/votos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ export default async function ResultadosPage({ params }: { params: Promise<{ id:
   const { id } = await params
   
   // Fetch encuestas
-  const encuestas = await getEncuestasPorAsambeana(id)
+  const encuestas = await getEncuestasPorAsamblea(id)
   
   // Fetch results for each encuesta
   const encuestasConResultados = await Promise.all(

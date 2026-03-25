@@ -101,7 +101,7 @@ export async function deleteOpcion(id: string) {
   }
 }
 
-export async function getEncuestasPorAsambeana(asambleaId: string) {
+export async function getEncuestasPorAsamblea(asambleaId: string) {
   try {
     const encuestas = await prisma.encuesta.findMany({
       where: {

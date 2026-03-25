@@ -80,15 +80,15 @@ function PQRSPageContent() {
           >
             ← Volver
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">PQRSD</h1>
+          <h1 className="text-3xl font-bold text-gray-900">PQRS</h1>
           <p className="text-gray-600 mt-2">
-            Envíanos tu petición, queja, reclamo, sugerencia o denuncia
+            Envíanos tu petición, queja, reclamo, sugerencia
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Nuevo Solicitud</CardTitle>
+            <CardTitle>Nueva Solicitud</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={handleSubmit} className="space-y-4">
