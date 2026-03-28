@@ -32,7 +32,7 @@ interface ResultadosEnVivoProps {
 }
 
 export function ResultadosEnVivo({ encuestaId, pregunta, tipo }: ResultadosEnVivoProps) {
-  const { resultados, isLoading, error, refetch } = useVotosRealtime(encuestaId)
+  const { resultados, isLoading, error, isConnected, lastEvent, refetch } = useVotosRealtime(encuestaId)
 
   if (isLoading) {
     return (
@@ -72,10 +72,12 @@ export function ResultadosEnVivo({ encuestaId, pregunta, tipo }: ResultadosEnViv
     <Card className="mb-4">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            {pregunta}
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
+            <span className="text-xs text-muted-foreground">
+              {isConnected ? (lastEvent || 'En vivo') : 'Conectando...'}
+            </span>
+          </div>
           <Badge variant="outline">{tipo}</Badge>
         </div>
       </CardHeader>
