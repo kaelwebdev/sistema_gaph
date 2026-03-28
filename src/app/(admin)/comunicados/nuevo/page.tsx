@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { redirect } from 'next/navigation'
+import { env } from '@/lib/env'
 
 export default function NuevoComunicadoPage() {
   async function handleSubmit(formData: FormData) {
     const result = await createComunicado({
       titulo: formData.get('titulo') as string,
       contenido: formData.get('contenido') as string,
-      clienteId: 'cliente_default_001',
+      clienteId: env.NEXT_PUBLIC_DEFAULT_CLIENT_ID,
     })
 
     if (result.success) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
+import { env } from "@/lib/env"
 
 const publicRoutes = [
   "/",
@@ -18,7 +19,7 @@ export default async function authMiddleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET })
+  const token = await getToken({ req, secret: env.AUTH_SECRET })
   const isAuthenticated = !!token
 
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))

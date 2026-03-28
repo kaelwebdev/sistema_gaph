@@ -4,9 +4,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Trash2, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
+import { env } from '@/lib/env'
 
 export default async function ComunicadosPage() {
-  const comunicados = await getComunicados('cliente_default_001')
+  const comunicados = await getComunicados(env.NEXT_PUBLIC_DEFAULT_CLIENT_ID)
 
   return (
     <div className="space-y-6">

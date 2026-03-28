@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { env } from '@/lib/env'
 
 export default function NuevaAsambleaPage() {
   const router = useRouter()
@@ -24,7 +25,7 @@ export default function NuevaAsambleaPage() {
     // Obtener la sesión
     const sessionRes = await fetch('/api/auth/session')
     const session = await sessionRes.json()
-    const clienteId = session?.user?.clienteId || 'cliente_default_001'
+    const clienteId = session?.user?.clienteId || env.NEXT_PUBLIC_DEFAULT_CLIENT_ID
     
     console.log('Creando asamblea:', { titulo, fecha, clienteId })
     

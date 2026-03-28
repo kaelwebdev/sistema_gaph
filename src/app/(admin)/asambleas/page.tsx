@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Plus, Calendar, BarChart3 } from 'lucide-react'
 import { getAsambleas } from '@/lib/actions'
+import { env } from '@/lib/env'
 
 interface Asamblea {
   id: string
@@ -35,8 +36,8 @@ export default function AsambleasPage() {
         const session = await sessionRes.json()
         console.log('Sesión:', session)
         
-        // Usar el clienteId de la sesión, o fallback a cliente_default_001
-        const clienteId = session?.user?.clienteId || 'cliente_default_001'
+        // use a default clientId if session doesn't have one for some reason
+        const clienteId = session?.user?.clienteId || env.NEXT_PUBLIC_DEFAULT_CLIENT_ID
         console.log('ClienteId usado:', clienteId)
         
         const data = await getAsambleas(clienteId)

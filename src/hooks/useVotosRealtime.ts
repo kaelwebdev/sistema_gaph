@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js'
 import { getEncuestaResultados } from '@/lib/actions/votos'
+import { env } from '@/lib/env'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
+const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL!
+const supabasePublishableKey = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
 
 const supabase = createClient(supabaseUrl, supabasePublishableKey)
 

@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { Plus, Pencil, Trash2 } from "lucide-react"
+import { env } from "@/lib/env"
 
 export default async function PersonasPage() {
-  const personas = await getPersonas("cliente_default_001")
+  const personas = await getPersonas(env.NEXT_PUBLIC_DEFAULT_CLIENT_ID)
 
   return (
     <div className="space-y-6">

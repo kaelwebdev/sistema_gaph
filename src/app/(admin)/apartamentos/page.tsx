@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Plus, Pencil, Trash2 } from "lucide-react"
+import { env } from "@/lib/env"
 
 const estadoColors: Record<string, string> = {
   PROPIO: "bg-green-100 text-green-800",
@@ -12,7 +13,7 @@ const estadoColors: Record<string, string> = {
 }
 
 export default async function ApartamentosPage() {
-  const apartamentos = await getApartamentos("cliente_default_001")
+  const apartamentos = await getApartamentos(env.NEXT_PUBLIC_DEFAULT_CLIENT_ID)
 
   return (
     <div className="space-y-6">

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { redirect } from "next/navigation"
+import { env } from "@/lib/env"
 
 export default function NuevaPersonaPage() {
   async function handleSubmit(formData: FormData) {
@@ -14,7 +15,7 @@ export default function NuevaPersonaPage() {
       cedula: formData.get("cedula") as string,
       telefono: (formData.get("telefono") as string) || undefined,
       email: (formData.get("email") as string) || undefined,
-      clienteId: "cliente_default_001",
+      clienteId: env.NEXT_PUBLIC_DEFAULT_CLIENT_ID,
     })
 
     if (result.success) {

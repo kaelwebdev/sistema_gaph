@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectItem } from "@/components/ui/select"
 import { redirect } from "next/navigation"
+import { env } from "@/lib/env"
 
 export default function NuevoApartamentoPage() {
   async function handleSubmit(formData: FormData) {
@@ -17,7 +18,7 @@ export default function NuevoApartamentoPage() {
       estado: formData.get("estado") as "PROPIO" | "ARRIENDO" | "VACIO",
       observaciones: (formData.get("observaciones") as string) || undefined,
       habitantes: parseInt(formData.get("habitantes") as string) || 0,
-      clienteId: "cliente_default_001",
+      clienteId: env.NEXT_PUBLIC_DEFAULT_CLIENT_ID,
     })
 
     if (result.success) {
