@@ -24,11 +24,12 @@ Sistema de gestión para unidades residenciales con funcionalidades de administr
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router)
-- **UI**: React 19 + Tailwind CSS + shadcn/ui
-- **Base de datos**: PostgreSQL + Prisma ORM
-- **Autenticación**: NextAuth.js (en desarrollo)
-- **Runtime**: Bun
+- **Framework**: Next.js 16.2.0 (App Router)
+- **UI**: React 19.2.4 + Tailwind CSS v4 + shadcn/ui
+- **Backend**: Supabase (PostgreSQL + Realtime + Auth)
+- **ORM**: Prisma ORM (conectado a Supabase PostgreSQL)
+- **Autenticación**: NextAuth.js v5 (Auth.js) + Supabase Auth
+- **Realtime**: Supabase Realtime para votos en tiempo real
 - **Testing**: Vitest (unit/integration) + Playwright (E2E)
 
 ## Estructura del Proyecto
@@ -36,30 +37,39 @@ Sistema de gestión para unidades residenciales con funcionalidades de administr
 ```
 src/
 ├── app/
-│   ├── (admin)/          # Rutas del panel de administración
-│   │   ├── dashboard/    # Dashboard principal
-│   │   ├── personas/     # Gestión de personas
-│   │   ├── apartamentos/ # Gestión de apartamentos
+│   ├── (admin)/         # Rutas del panel de administración (protegidas)
+│   │   ├── dashboard/   # Dashboard principal
+│   │   ├── personas/    # Gestión de personas (CRUD)
+│   │   │   └── [id]/    # Editar persona
+│   │   ├── apartamentos/ # Gestión de apartamentos (CRUD)
+│   │   │   └── [id]/    # Editar apartamento
 │   │   ├── asambleas/   # Gestión de asambleas y encuestas
 │   │   │   └── [id]/
 │   │   │       └── resultados/ # Página de resultados
 │   │   ├── comunicados/ # Gestión de comunicados
 │   │   └── pqrs/        # Lista y gestión de PQRS
-│   ├── (public)/         # Rutas públicas
-│   │   ├── page.tsx     # Landing page con selector de unidad
-│   │   ├── unidad/      # Portal por unidad residencial
-│   │   ├── votar/      # Sistema de votación público
+│   ├── (public)/        # Rutas públicas
+│   │   ├── page.tsx    # Landing page con selector de unidad
+│   │   ├── unidad/     # Portal por unidad residencial
+│   │   ├── votar/     # Sistema de votación público
+│   │   │   └── [asambaId]/ # Votación por asamblea
 │   │   └── contacto/   # Formulario público de PQRS
-│   └── api/             # API routes (auth, etc.)
+│   ├── login/          # Página de login
+│   ├── api/            # API routes (auth, etc.)
+│   └── page.tsx        # Redirect raíz
 ├── components/
-│   └── ui/              # Componentes shadcn/ui
-└── lib/
-    ├── actions/         # Server Actions de Next.js
-    ├── schemas/         # Validación Zod
-    └── db.ts            # Cliente Prisma
+│   └── ui/             # Componentes shadcn/ui
+├── lib/
+│   ├── actions/        # Server Actions de Next.js
+│   ├── schemas/        # Validación Zod
+│   └── db.ts           # Cliente Prisma
+└── generated/
+    └── prisma/         # Cliente Prisma generado
 ```
 
 ## Entidades y Relaciones
+
+> **Nota**: La base de datos es PostgreSQL en Supabase. Las tablas incluyen soft deletes (`deletedAt`) para compatibilidad con el backend de Supabase.
 
 ### Modelo Entidad-Relación
 
@@ -70,6 +80,10 @@ erDiagram
     CLIENTE ||--o{ ASAMBLEA : celebra
     CLIENTE ||--o{ COMUNICADO : publica
     CLIENTE ||--o{ PQRS : recibe
+    CLIENTE ||--o{ USER : administra
+
+    USER ||--o{ ACCOUNT : tiene
+    USER ||--o{ SESSION : tiene
 
     PERSONA ||--o{ PERSONA_APARTAMENTO : habita
     APARTAMENTO ||--o{ PERSONA_APARTAMENTO : tiene
@@ -117,14 +131,14 @@ erDiagram
         string id PK
         string titulo
         datetime fecha
-        EstadoAsambea estado
+        EstadoAsamblea estado
         string clienteId FK
     }
 
     PARTICIPANTE_ASAMBLEA {
         string id PK
         TipoParticipante tipo
-        string asambeaId FK
+        string asambleaId FK
         string apartamentoId FK
         string personaId FK
     }
@@ -135,7 +149,7 @@ erDiagram
         int orden
         EstadoEncuesta estado
         TipoEncuesta tipo
-        string asambeaId FK
+        string asambleaId FK
     }
 
     OPCION {
@@ -174,6 +188,47 @@ erDiagram
         string clienteId FK
         string apartamentoId FK
     }
+
+    USER {
+        string id PK
+        string name
+        string email UK
+        datetime emailVerified
+        string image
+        string password
+        Role role
+        datetime createdAt
+        datetime updatedAt
+        string clienteId FK
+    }
+
+    ACCOUNT {
+        string id PK
+        string userId FK
+        string type
+        string provider
+        string providerAccountId UK
+        string refresh_token
+        string access_token
+        int expires_at
+        string token_type
+        string scope
+        string id_token
+        string session_state
+    }
+
+    SESSION {
+        string id PK
+        string sessionToken UK
+        string userId FK
+        datetime expires
+    }
+
+    VERIFICATION_TOKEN {
+        string identifier
+        string token UK
+        datetime expires
+    }
 ```
 
 ### Descripción de Entidades
@@ -184,13 +239,16 @@ erDiagram
 | **Apartamento** | Unidad habitacional | `numero`, `torre`, `nivel`, `estado` (PROPIO/ARRIENDO/VACIO) |
 | **Persona** | Residente o propietario | `nombre`, `cedula`, `telefono`, `email` |
 | **PersonaApartamento** | Relación Persona-Apartamento | `rol` (PROPIETARIO/APODERADO/RESIDENTE), `estadoActivo` |
-| **Asambea** | Junta de propietarios | `titulo`, `fecha`, `estado` (ABIERTA/CERRADA) |
-| **ParticipanteAsambea** | Participante registrado en asamblea | `tipo` (PROPIETARIO/APODERADO) |
+| **Asamblea** | Junta de propietarios | `titulo`, `fecha`, `estado` (ABIERTA/CERRADA) |
+| **ParticipanteAsamblea** | Participante registrado en asamblea | `tipo` (PROPIETARIO/APODERADO) |
 | **Encuesta** | Sondeo en una asamblea | `pregunta`, `tipo` (BINARIA/MULTIPLE), `estado` (ACTIVA/CERRADA) |
 | **Opcion** | Opción de respuesta | `texto`, `orden` |
 | **Voto** | Voto registrado | Único por (apartamento, encuesta) |
 | **Comunicado** | Anuncio publicado | `titulo`, `contenido`, `fechaPublicacion` |
 | **PQRS** | Petición/Queja/Reclamo/Sugerencia | `tipo`, `asunto`, `descripcion`, `estado` |
+| **User** | Usuario administrador | `name`, `email`, `password`, `role` (USER/ADMIN) |
+| **Account** | Cuenta OAuth/credenciales | Proveedor de autenticación |
+| **Session** | Sesión activa | Token de sesión con expiración |
 
 ### Enums (Valores permitidos)
 
@@ -198,7 +256,7 @@ erDiagram
 |------|---------|
 | **EstadoApartamento** | `PROPIO`, `ARRIENDO`, `VACIO` |
 | **RolPersona** | `PROPIETARIO`, `APODERADO`, `RESIDENTE` |
-| **EstadoAsambea** | `ABIERTA`, `CERRADA` |
+| **EstadoAsamblea** | `ABIERTA`, `CERRADA` |
 | **TipoParticipante** | `PROPIETARIO`, `APODERADO` |
 | **EstadoEncuesta** | `ACTIVA`, `CERRADA` |
 | **TipoEncuesta** | `BINARIA`, `MULTIPLE` |
@@ -210,7 +268,7 @@ erDiagram
 
 1. **Un apartamento = un voto por encuesta**: La tabla `Voto` tiene índice único en `(apartamentoId, encuestaId)` para garantizar que cada apartamento vote solo una vez por pregunta.
 
-2. **Un representante por apartamento en asamblea**: La tabla `ParticipanteAsambea` tiene índice único en `(asambeaId, apartamentoId)` para que solo un representante vote por apartamento.
+2. **Un representante por apartamento en asamblea**: La tabla `ParticipanteAsamblea` tiene índice único en `(asambleaId, apartamentoId)` para que solo un representante vote por apartamento.
 
 3. **Una persona por cédula por cliente**: La tabla `Persona` tiene restricción única en `(cedula, clienteId)` para evitar duplicados.
 
@@ -220,21 +278,21 @@ erDiagram
 
 El proyecto cuenta con una suite completa de testing:
 
-### Tests Unitarios (Vitest) - 62 tests
+### Tests Unitarios (Vitest)
 
 ```bash
-bun test
+npm test
 ```
 
-| Carpeta | Descripción | Tests |
-|---------|-------------|-------|
-| `tests/schemas/` | Validación de Zod schemas | 39 |
-| `tests/actions/` | Server Actions mockeadas | 23 |
+| Carpeta | Descripción |
+|---------|-------------|
+| `tests/schemas/` | Validación de Zod schemas |
+| `tests/actions/` | Server Actions mockeadas |
 
-### Tests E2E (Playwright) - 8 tests
+### Tests E2E (Playwright)
 
 ```bash
-bun run test:e2e
+npm run test:e2e
 ```
 
 Los tests E2E cubren:
@@ -242,20 +300,11 @@ Los tests E2E cubren:
 - Navegación entre páginas
 - Formulario público de PQRS
 
-### Scripts de Testing
-
-| Comando | Descripción |
-|---------|-------------|
-| `bun test` | Tests unitarios (schemas + actions) |
-| `bun test:coverage` | Coverage de tests unitarios |
-| `bun run test:e2e` | Tests E2E automatizados |
-| `bun run test:e2e:ui` | Tests E2E con UI interactiva |
-
 ## Primeros Pasos
 
 ### Requisitos Previos
-- Node.js 18+ o Bun
-- PostgreSQL
+- Node.js 18+
+- Cuenta de Supabase (gratuita)
 
 ### Instalación
 
@@ -265,45 +314,60 @@ git clone <repo-url>
 cd sistema-gaph
 ```
 
-2. Instalar dependencias:
-```bash
-bun install
-# o
-npm install
-```
+2. Crear proyecto en Supabase:
+   - Ir a [supabase.com](https://supabase.com) y crear un proyecto nuevo
+   - Obtener las credenciales del proyecto (URL, keys)
 
 3. Configurar variables de entorno:
 ```bash
 cp .env.example .env
-# Editar .env con las credenciales de PostgreSQL
+# Editar .env con las credenciales de Supabase
 ```
 
-4. Generar el cliente Prisma:
+4. Configurar el connection string en `.env`:
+   - Usar el **Transaction Pooler** de Supabase para producción
+   - Usar **Direct Connection** para migraciones
+
+5. Generar el cliente Prisma:
 ```bash
 npx prisma generate
 ```
 
-5. Aplicar migraciones:
+6. Aplicar migraciones:
 ```bash
 npx prisma migrate dev
 ```
 
-6. Iniciar el servidor de desarrollo:
+7. Iniciar el servidor de desarrollo:
 ```bash
-bun run dev
+npm run dev
 ```
 
-7. Abrir http://localhost:3000
+8. Abrir http://localhost:3000
+
+### Variables de Entorno Requeridas
+
+| Variable | Descripción |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Clave pública de Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Clave de servicio (solo backend) |
+| `DATABASE_URL` | Connection string con pooling |
+| `DIRECT_URL` | Connection string directa (para migraciones) |
 
 ## Scripts Disponibles
 
 | Comando | Descripción |
 |---------|-------------|
-| `bun run dev` | Iniciar servidor de desarrollo |
-| `bun run build` | Construir para producción |
-| `bun run start` | Iniciar servidor de producción |
-| `bun test` | Ejecutar tests unitarios |
-| `bun run test:e2e` | Ejecutar tests E2E |
+| `npm run dev` | Iniciar servidor de desarrollo |
+| `npm run dev:turbo` | Iniciar con Turbopack |
+| `npm run build` | Construir para producción |
+| `npm run start` | Iniciar servidor de producción |
+| `npm run lint` | Ejecutar ESLint |
+| `npm test` | Ejecutar tests unitarios |
+| `npm run test:coverage` | Coverage de tests |
+| `npm run test:e2e` | Ejecutar tests E2E |
+| `npm run test:e2e:ui` | Tests E2E con UI interactiva |
 | `npx prisma studio` | Abrir interfaz de Prisma |
 
 ## Contribuir
