@@ -1,7 +1,6 @@
-import { getComunicados, deleteComunicado } from '@/lib/actions'
+import { getComunicados } from '@/lib/actions'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Trash2, Calendar } from 'lucide-react'
+import { ComunicadosList } from '@/components/admin/ComunicadosList'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { env } from '@/lib/env'
@@ -21,38 +20,10 @@ export default async function ComunicadosPage() {
         </Link>
       </div>
 
-      <div className="space-y-4">
-        {comunicados.map((comunicado) => (
-          <Card key={comunicado.id}>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold mb-2">{comunicado.titulo}</h3>
-                  <p className="text-gray-600 mb-4 whitespace-pre-wrap">{comunicado.contenido}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(comunicado.fechaPublicacion).toLocaleDateString('es-CO', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </div>
-                </div>
-                <form action={deleteComunicado.bind(null, comunicado.id)}>
-                  <Button variant="ghost" size="sm" type="submit">
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </form>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {comunicados.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            No hay comunicados publicados
-          </div>
-        )}
-      </div>
+      <ComunicadosList 
+        comunicados={comunicados} 
+        clienteId={env.NEXT_PUBLIC_DEFAULT_CLIENT_ID} 
+      />
     </div>
   )
 }

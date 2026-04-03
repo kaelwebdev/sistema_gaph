@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/db'
-import { createComunicadoSchema } from '@/lib/schemas'
+import { createComunicadoSchema, updateComunicadoSchema } from '@/lib/schemas'
 import { revalidatePath } from 'next/cache'
 
 export async function createComunicado(data: {
@@ -40,6 +40,39 @@ export async function deleteComunicado(id: string) {
   } catch {
     throw new Error('Error al eliminar el comunicado')
   }
+}
+
+export async function updateComunicado(
+  id: string,
+  data: {
+    titulo: string
+    contenido: string
+  }
+) {
+  const validated = updateComunicadoSchema.safeParse(data)
+  if (!validated.success) {
+    return { error: validated.error.errors[0].message }
+  }
+
+  try {
+    const comunicado = await prisma.comunicado.update({
+      where: { id },
+      data: {
+        titulo: validated.data.titulo,
+        contenido: validated.data.contenido,
+      },
+    })
+    revalidatePath('/comunicados')
+    return { success: true, data: comunicado }
+  } catch {
+    return { error: 'Error al actualizar el comunicado' }
+  }
+}
+
+export async function getComunicadoById(id: string) {
+  return prisma.comunicado.findUnique({
+    where: { id },
+  })
 }
 
 export async function getComunicados(clienteId: string) {
