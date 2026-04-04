@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getPQRS, updatePQRSEstado } from '@/lib/actions'
+import { getPQRS, updatePQRSEstado, deletePQRS } from '@/lib/actions'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Building2 } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Building2, Trash2 } from 'lucide-react'
 import { env } from '@/lib/env'
 
 const tipoColors: Record<string, string> = {
@@ -53,6 +54,7 @@ interface PQRS {
 export default function PQRSPage() {
   const [pqrsList, setPqrsList] = useState<PQRS[]>([])
   const [loading, setLoading] = useState(true)
+  const [pqrsToDelete, setPqrsToDelete] = useState<string | null>(null)
 
   // Fetch on mount
   useEffect(() => {
@@ -74,6 +76,13 @@ export default function PQRSPage() {
     setPqrsList(prev => 
       prev.map(p => p.id === pqrsId ? { ...p, estado: nuevoEstado } : p)
     )
+  }
+
+  async function handleDelete(pqrsId: string) {
+    const result = await deletePQRS(pqrsId)
+    if (result.success) {
+      setPqrsList(prev => prev.filter(p => p.id !== pqrsId))
+    }
   }
 
   if (loading) {
@@ -136,6 +145,15 @@ export default function PQRSPage() {
                     {estadoLabels[estado]}
                   </Button>
                 ))}
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="ml-auto"
+                  onClick={() => setPqrsToDelete(pqrs.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Eliminar
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -146,6 +164,21 @@ export default function PQRSPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={pqrsToDelete !== null}
+        onOpenChange={(open) => !open && setPqrsToDelete(null)}
+        onConfirm={() => {
+          if (pqrsToDelete) {
+            handleDelete(pqrsToDelete)
+          }
+        }}
+        title="Eliminar PQRS"
+        description="¿Estás seguro de que deseas eliminar este PQRS? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
     </div>
   )
 }

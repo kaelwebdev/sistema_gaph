@@ -84,3 +84,15 @@ export async function updatePQRSEstado(id: string, estado: 'PENDIENTE' | 'RESUEL
     return { error: 'Error al actualizar el estado' }
   }
 }
+
+export async function deletePQRS(id: string) {
+  try {
+    await prisma.pQRS.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    })
+    return { success: true }
+  } catch {
+    return { error: 'Error al eliminar el PQRS' }
+  }
+}
