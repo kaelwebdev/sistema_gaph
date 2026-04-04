@@ -305,10 +305,10 @@ export default function VotarPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ asambaId: string }>
+  params: Promise<{ asambleaId: string }>
   searchParams: Promise<{ clienteId?: string }>
 }) {
-  const [asambaId, setAsambaId] = useState<string | null>(null)
+  const [asambleaId, setAsambleaId] = useState<string | null>(null)
   const [clienteId, setClienteId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -317,7 +317,7 @@ export default function VotarPage({
       const resolvedParams = await params
       const resolvedSearch = await searchParams
 
-      setAsambaId(resolvedParams.asambaId)
+      setAsambleaId(resolvedParams.asambleaId)
 
       // If clienteId provided in URL, use it
       if (resolvedSearch.clienteId) {
@@ -328,7 +328,7 @@ export default function VotarPage({
 
       // Otherwise, fetch the assembly to get its clienteId
       try {
-        const asamblea = await getAsamblea(resolvedParams.asambaId)
+        const asamblea = await getAsamblea(resolvedParams.asambleaId)
         if (asamblea) {
           setClienteId(asamblea.clienteId)
         }
@@ -342,7 +342,7 @@ export default function VotarPage({
     resolveParams()
   }, [params, searchParams])
 
-  if (loading || !asambaId || !clienteId) {
+  if (loading || !asambleaId || !clienteId) {
     return (
       <div className="container mx-auto max-w-2xl px-4 py-8">
         <div className="flex items-center justify-center py-12">
@@ -354,7 +354,7 @@ export default function VotarPage({
 
   return (
     <ParticipanteProvider>
-      <VotingContent clienteId={clienteId} asambleaId={asambaId} />
+      <VotingContent clienteId={clienteId} asambleaId={asambleaId} />
     </ParticipanteProvider>
   )
 }

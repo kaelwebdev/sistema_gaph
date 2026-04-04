@@ -18,7 +18,7 @@ src/
 │   │   ├── page.tsx    # Landing page con selector de unidad
 │   │   ├── unidad/     # Portal por unidad residencial
 │   │   ├── votar/     # Sistema de votación público
-│   │   │   └── [asambaId]/ # Votación por asamblea
+│   │   │   └── [asambleaId]/ # Votación por asamblea
 │   │   └── contacto/   # Formulario público de PQRS
 │   ├── login/          # Página de login
 │   ├── api/            # API routes (auth, etc.)
