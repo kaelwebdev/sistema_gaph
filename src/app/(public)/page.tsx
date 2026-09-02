@@ -2,48 +2,48 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getClientes } from '@/lib/actions/public'
+import { getCondominiums } from '@/lib/actions/public'
 
-interface Cliente {
+interface Condominium {
   id: string
-  nombre: string
+  name: string
 }
 
 export default function LandingPage() {
   const router = useRouter()
-  const [clientes, setClientes] = useState<Cliente[]>([])
-  const [selectedClienteId, setSelectedClienteId] = useState<string>('')
+  const [condominiums, setCondominiums] = useState<Condominium[]>([])
+  const [selectedCondominiumId, setSelectedCondominiumId] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    async function loadClientes() {
+    async function loadCondominiums() {
       try {
-        const data = await getClientes()
-        setClientes(data)
+        const data = await getCondominiums()
+        setCondominiums(data)
       
-        // Auto-select if only one cliente
+        // Auto-select if only one
         if (data.length === 1) {
-          setSelectedClienteId(data[0].id)
+          setSelectedCondominiumId(data[0].id)
         }
       } catch (error) {
-        console.error('Error loading clientes:', error)
+        console.error('Error loading condominiums:', error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    loadClientes()
+    loadCondominiums()
   }, [])
 
   const handleContinuar = () => {
-    if (selectedClienteId) {
-      router.push(`/unidad/${selectedClienteId}`)
+    if (selectedCondominiumId) {
+      router.push(`/condominium/${selectedCondominiumId}`)
     }
   }
 
   const handlePQRS = () => {
-    if (selectedClienteId) {
-      router.push(`/contacto?clienteId=${selectedClienteId}`)
+    if (selectedCondominiumId) {
+      router.push(`/contacto?clienteId=${selectedCondominiumId}`)
     } else {
       alert('Por favor selecciona una unidad residencial primero')
     }
@@ -57,7 +57,7 @@ export default function LandingPage() {
     )
   }
 
-  if (clientes.length === 0) {
+  if (condominiums.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-gray-500">No hay unidades residenciales disponibles</div>
@@ -79,29 +79,29 @@ export default function LandingPage() {
 
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <label
-            htmlFor="cliente-select"
+            htmlFor="condominium-select"
             className="mb-2 block text-sm font-medium text-gray-700"
           >
             Unidad Residencial
           </label>
           
           <select
-            id="cliente-select"
-            value={selectedClienteId}
-            onChange={(e) => setSelectedClienteId(e.target.value)}
+            id="condominium-select"
+            value={selectedCondominiumId}
+            onChange={(e) => setSelectedCondominiumId(e.target.value)}
             className="mb-6 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">Selecciona una opción...</option>
-            {clientes.map((cliente) => (
-              <option key={cliente.id} value={cliente.id}>
-                {cliente.nombre}
+            {condominiums.map((condominium) => (
+              <option key={condominium.id} value={condominium.id}>
+                {condominium.name}
               </option>
             ))}
           </select>
 
           <button
             onClick={handleContinuar}
-            disabled={!selectedClienteId}
+            disabled={!selectedCondominiumId}
             className="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             Continuar

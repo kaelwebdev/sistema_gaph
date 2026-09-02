@@ -28,13 +28,13 @@ export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 
-async function seedApartamentos(clienteId: string) {
+async function seedApartments(condominiumId: string) {
 
     const torres = 10;
     const pisos = 5;
     const aptosPorPiso = 4;
 
-    const apartamentos = [];
+    const apartments = [];
 
     for (let torre = 1; torre <= torres; torre++) {
 
@@ -42,13 +42,13 @@ async function seedApartamentos(clienteId: string) {
 
             for (let apto = 1; apto <= aptosPorPiso; apto++) {
 
-                const numero = `${piso}0${apto}`; // 101,102,103,104
+                const number = `${piso}0${apto}`; // 101,102,103,104
 
-                apartamentos.push({
-                    numero,
-                    torre: torre.toString(),
-                    nivel: piso,
-                    clienteId
+                apartments.push({
+                    number,
+                    tower: torre.toString(),
+                    level: piso,
+                    condominiumId
                 });
 
             }
@@ -57,33 +57,38 @@ async function seedApartamentos(clienteId: string) {
 
     }
 
-    await prisma.apartamento.createMany({
-        data: apartamentos,
+    await prisma.apartment.createMany({
+        data: apartments,
         skipDuplicates: true
     });
 
-    console.log("Apartamentos creados:", apartamentos.length);
+    console.log("Apartments created:", apartments.length);
 }
 
 async function main() {
-
-    // create cliente and associate admin in one step using upsert
-    const cliente = await prisma.cliente.upsert({
-        where: { id: env.NEXT_PUBLIC_DEFAULT_CLIENT_ID },
+    if (!env.NEXT_PUBLIC_DEFAULT_CONDOMINIUM_ID) {
+        console.log(env);
+        throw new Error("NEXT_PUBLIC_DEFAULT_CONDOMINIUM_ID is not defined")
+    } else {
+        console.log(env);
+    }
+    // create condominium and associate admin in one step using upsert
+    const condominium = await prisma.condominium.upsert({
+        where: { id: env.NEXT_PUBLIC_DEFAULT_CONDOMINIUM_ID },
         update: {},
         create: {
-            id: env.NEXT_PUBLIC_DEFAULT_CLIENT_ID,
-            nombre: "Unidad Residencial Ejemplo",
+            id: env.NEXT_PUBLIC_DEFAULT_CONDOMINIUM_ID,
+            name: "Unidad Residencial Ejemplo",
         }
     });
 
-    console.log("cliente inicial creado");
+    console.log("Initial condominium created");
 
-    // create admin user and associate with cliente
+    // create admin user and associate with condominium
     await prisma.user.upsert({
         where: { email: "admin@ejemplo.com" },
         update: {
-            clienteId: cliente.id
+            condominiumId: condominium.id
         },
         create: {
             id: "admin_007",
@@ -91,17 +96,17 @@ async function main() {
             email: "admin@ejemplo.com",
             password: "admin123",
             role: "ADMIN",
-            clienteId: cliente.id
+            condominiumId: condominium.id
         }
     });
 
-    console.log("admin inicial creado");
+    console.log("Initial admin created");
 
-    if (!cliente) {
-        throw new Error("Cliente no encontrado");
+    if (!condominium) {
+        throw new Error("Condominium not found")
     }
 
-    await seedApartamentos(cliente.id);
+    await seedApartments(condominium.id)
 }
 
 main()

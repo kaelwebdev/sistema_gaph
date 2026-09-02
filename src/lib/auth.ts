@@ -57,7 +57,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           role: user.role || "USER",
-          clienteId: user.clienteId || null,
+          condominiumId: user.condominiumId || null,
         }
       },
     }),
@@ -67,7 +67,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id
         token.role = (user as { role?: string }).role || "USER"
-        token.clienteId = (user as { clienteId?: string | null }).clienteId
+        token.condominiumId = (user as { condominiumId?: string | null }).condominiumId
       }
       return token
     },
@@ -75,7 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
-        session.user.clienteId = token.clienteId as string | null
+        session.user.condominiumId = token.condominiumId as string | null
       }
       return session
     },

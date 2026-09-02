@@ -42,7 +42,7 @@ En la configuración del proyecto en Vercel, ir a **"Environment Variables"** y 
 
 #### 4. Ejecutar Migraciones en Producción
 
-Vercel no ejecuta migraciones automáticamente. Tenés dos opciones:
+Vercel no ejecuta migraciones automáticamente. Tenés dos surveyOptions:
 
 **Opción A: Usar Vercel CLI (recomendado)**
 
@@ -76,5 +76,5 @@ npx prisma migrate deploy
 
 #### Habilitar Real-time en la base de datos
 
-Desde la interfaz de supabase se debe habilitar real-time en las tablas: Voto, Opcion, Encuesta
+Desde la interfaz de supabase se debe habilitar real-time en las tablas: Vote, SurveyOption, Survey
 ```

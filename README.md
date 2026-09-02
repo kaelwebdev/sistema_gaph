@@ -1,26 +1,26 @@
-# Sistema GAPH - Gestión de Asambleas para Propiedad Horizontal
+# Sistema GAPH - Gestión de Assemblies para Propiedad Horizontal
 
-Sistema de gestión para unidades residenciales (condominios) para la administración del sistema de votos que se presentan en una asamblea, ademas de tambien poder gestionar comunicados y PQRS.
+Sistema de gestión para unidades residenciales (condominios) para la administración del sistema de votes que se presentan en una assemblie, ademas de tambien poder gestionar announcements y PQRSRequest.
 
 ## Características
 
 ### Panel de Administración (`/dashboard`)
-- **Apartamentos**: CRUD de apartamentos con número, torre y nivel
-- **Personas**: Gestión de residentes con identificación
-- **Asambleas**: 
-  - Crear y gestionar asambleas
-  - Registrar participantes (nombre, cédula, torre, apartamento)
+- **Apartments**: CRUD de apartments con número, torre y nivel
+- **Persons**: Gestión de residentes con identificación
+- **Assemblies**: 
+  - Crear y gestionar assemblies
+  - Registrar participants (nombre, cédula, torre, apartment)
   - Crear encuestas (binarias o múltiples)
   - Visualizar Votación en tiempo real
   - **Resultados con gráficos visuales** y botón de actualizar
-- **Comunicados**: Publicación de anuncios a residentes
-- **PQRS**: Gestión de peticiones, quejas, reclamos y sugerencias con cambio de estado
+- **Announcements**: Publicación de anuncios a residentes
+- **PQRSRequest**: Gestión de peticiones, quejas, reclamos y sugerencias con cambio de estado
 
 ### Portal Público
 - **Selección de unidad residencial**: Pantalla de bienvenida para seleccionar la Unidad Residencial (Cliente).
-- **Identificación de participante**: Identifiacion mediante cédula, sin necesidad de login.
-- **Votación**: Acceso a encuestas activas de la asamblea para votación.
-- **PQRS público**: Formulario sin login para enviar solicitudes (tipo, asunto, descripción, nombre, torre, apartamento, email, teléfono)
+- **Identificación de participant**: Identifiacion mediante cédula, sin necesidad de login.
+- **Votación**: Acceso a encuestas activas de la assemblie para votación.
+- **PQRSRequest público**: Formulario sin login para enviar solicitudes (tipo, asunto, descripción, nombre, torre, apartment, email, teléfono)
 
 ## Tech Stack
 
@@ -29,7 +29,7 @@ Sistema de gestión para unidades residenciales (condominios) para la administra
 - **Backend**: Supabase (PostgreSQL + Realtime)
 - **ORM**: Prisma ORM (conectado a Supabase PostgreSQL)
 - **Autenticación**: NextAuth.js v5 (Auth.js)
-- **Realtime**: Supabase Realtime para votos en tiempo real
+- **Realtime**: Supabase Realtime para votes en tiempo real
 - **Testing**: Vitest (unit/integration) + Playwright (E2E)
 
 ## Scripts Disponibles

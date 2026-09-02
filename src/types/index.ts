@@ -1,35 +1,12 @@
-import type {
-  Apartamento,
-  Persona,
-  PersonaApartamento,
-  Asamblea,
-  ParticipanteAsamblea,
-  Encuesta,
-  Opcion,
-  Voto,
-  Comunicado,
-  PQRS,
-  Cliente,
-} from '@/generated/prisma'
+// Custom type exports
+// For Prisma model types, import directly from '@/generated/prisma/models/{ModelName}'
 
-export type {
-  Apartamento,
-  Persona,
-  PersonaApartamento,
-  Asamblea,
-  ParticipanteAsamblea,
-  Encuesta,
-  Opcion,
-  Voto,
-  Comunicado,
-  PQRS,
-  Cliente,
-}
-
-export type EstadoApartamento = 'PROPIO' | 'ARRIENDO' | 'VACIO'
-export type RolPersona = 'PROPIETARIO' | 'APODERADO' | 'RESIDENTE'
-export type EstadoAsambleum = 'ABIERTA' | 'CERRADA'
-export type TipoParticipante = 'PROPIETARIO' | 'APODERADO'
-export type EstadoEncuesta = 'ACTIVA' | 'CERRADA'
-export type TipoEncuesta = 'BINARIA' | 'MULTIPLE'
-export type TipoPQRS = 'PREGUNTA' | 'QUEJA' | 'RECLAMO' | 'SUGERENCIA'
+// Custom enum types
+export type ApartmentStatus = 'PROPIO' | 'ARRIENDO' | 'VACIO'
+export type PersonRole = 'PROPIETARIO' | 'APODERADO' | 'RESIDENTE'
+export type AssemblyStatus = 'ABIERTA' | 'CERRADA'
+export type ParticipantType = 'PROPIETARIO' | 'APODERADO'
+export type SurveyStatus = 'ACTIVA' | 'CERRADA'
+export type SurveyType = 'BINARIA' | 'MULTIPLE'
+export type PQRSType = 'PREGUNTA' | 'QUEJA' | 'RECLAMO' | 'SUGERENCIA'
+export type PQRSStatus = 'PENDIENTE' | 'RESUELTO' | 'RECHAZADO' | 'SIN_LEER'

@@ -7,7 +7,7 @@ const publicRoutes = [
   "/",
   "/login",
   "/api/auth",
-  "/votar",
+  "/to-vote",
   "/unidad",
 ]
 

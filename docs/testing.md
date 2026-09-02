@@ -22,4 +22,4 @@ npm run test:e2e
 Los tests E2E cubren:
 - Login y autenticación
 - Navegación entre páginas
-- Formulario público de PQRS
+- Formulario público de PQRSRequest

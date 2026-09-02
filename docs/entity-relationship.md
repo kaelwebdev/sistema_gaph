@@ -1,61 +1,60 @@
-## Entity-relationship
-**Relaciones del diagrama expresadas en frases**, respetando las cardinalidades del diagrama ( `||` = uno, `o{` = cero o muchos ).
+## Entity-Relationship
+**Relationships expressed in phrases**, respecting the cardinalities from the diagram ( `||` = one, `o{` = zero or many).
 
-### Relaciones con Cliente
+### Relationships with Condominium
 
-1. Un **Cliente puede tener cero o muchos Apartamentos**.
-2. Un **Cliente puede tener cero o muchas Personas**.
-3. Un **Cliente puede celebrar cero o muchas Asambleas**.
-4. Un **Cliente puede publicar cero o muchos Comunicados**.
-5. Un **Cliente puede recibir cero o muchas PQRS**.
-6. Un **Cliente puede administrar cero o muchos Usuarios**.
+1. A **Condominium can have zero or many Apartments**.
+2. A **Condominium can have zero or many Persons**.
+3. A **Condominium can hold zero or many Assemblies**.
+4. A **Condominium can publish zero or many Announcements**.
+5. A **Condominium can receive zero or many PQRSRequests**.
+6. a **Condominium can manage zero or many Users**.
 
-### Relaciones con User
+### Relationships with User
 
-7. Un **Usuario puede tener cero o muchas Cuentas (Account)**.
-8. Un **Usuario puede tener cero o muchas Sesiones**.
+7. A **User can have zero or many Accounts**.
+8. A **User can have zero or many Sessions**.
 
-### Relaciones entre Persona y Apartamento
+### Relationships between Person and Apartment
 
-9. Una **Persona puede habitar cero o muchos registros de Persona_Apartamento**.
-10. Un **Apartamento puede tener cero o muchos registros de Persona_Apartamento**.
+9. A **Person can inhabit zero or many PersonApartment records**.
+10. An **Apartment can have zero or many PersonApartment records**.
 
-*(Esto representa una relación muchos a muchos entre Personas y Apartamentos a través de Persona_Apartamento).*
+*(This represents a many-to-many relationship between Persons and Apartments through PersonApartment.)*
 
-### Relaciones con Apartamento
+### Relationships with Apartment
 
-11. Un **Apartamento puede representar cero o muchos Participantes de Asamblea**.
-12. Un **Apartamento puede emitir cero o muchos Votos**.
-13. Un **Apartamento puede registrar cero o muchas PQRS**.
+11. An **Apartment can represent zero or many AssemblyParticipants**.
+12. An **Apartment can cast zero or many Votes**.
+13. An **Apartment can register zero or many PQRSRequests**.
 
-### Relaciones con Asamblea
+### Relationships with Assembly
 
-14. Una **Asamblea puede tener cero o muchas Encuestas**.
-15. Una **Asamblea puede tener cero o muchos Participantes de Asamblea**.
+14. An **Assembly can have zero or many Surveys**.
+15. An **Assembly can have zero or many AssemblyParticipants**.
 
-### Relaciones con Persona en Asamblea
+### Relationships with Person in Assembly
 
-16. Una **Persona puede participar en cero o muchos Participantes de Asamblea**.
+16. A **Person can participate in zero or many AssemblyParticipants**.
 
-### Relaciones con Encuesta
+### Relationships with Survey
 
-17. Una **Encuesta puede tener cero o muchas Opciones**.
-18. Una **Encuesta puede recibir cero o muchos Votos**.
+17. A **Survey can have zero or many SurveyOptions**.
+18. A **Survey can receive zero or many Votes**.
 
-### Relaciones con Opcion
+### Relationships with SurveyOption
 
-19. Una **Opción puede recibir cero o muchos Votos**.
-
----
-
-💡 **Resumen conceptual del modelado de datos**
-
-* **Cliente** es la entidad raíz (Unidad residencial o condominio).
-* **Apartamento** y **Persona** se relacionan mediante **PersonaApartamento**.
-* **Asamblea** y **Persona** se relacionan mediante **ParticipanteAsamblea**.
-* **Asamblea**,  **Encuesta**, **Opcion**, **ParticipanteAsamblea** y **Voto**, tablas necesarias para el sistema de votacion, que no requerie login pero si registro previo como Persona y Participante. Y al momento de votar datos de identifacion (Cedula, Apartamento).
-* **PQRS** Atencion a los arrendatarios y propietarios, sin asociar registro previo para mayor facilidad.
-* **User, Account y Session** corresponden al sistema de autenticación.
+19. A **SurveyOption can receive zero or many Votes**.
 
 ---
 
+💡 **Conceptual Summary**
+
+* **Condominium** is the root entity (residential unit or condo).
+* **Apartment** and **Person** are related through **PersonApartment**.
+* **Assembly** and **Person** are related through **AssemblyParticipant**.
+* **Assembly**, **Survey**, **SurveyOption**, **AssemblyParticipant** and **Vote** are the tables needed for the voting system, which doesn't require login but does require prior registration as a Person and Participant. And when voting, identification data (ID number, Apartment).
+* **PQRSRequest** Attention to tenants and owners, without prior registration for ease of use.
+* **User, Account and Session** correspond to the authentication system.
+
+---

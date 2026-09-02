@@ -2,60 +2,66 @@
 
 import { prisma } from '@/lib/db'
 
-export async function getClientes() {
-  const clientes = await prisma.cliente.findMany({
+export async function getCondominiums() {
+  const condominiums = await prisma.condominium.findMany({
     orderBy: {
-      nombre: 'asc',
+      name: 'asc',
     },
     select: {
       id: true,
-      nombre: true,
+      name: true,
     },
   })
 
-  return clientes
+  return condominiums
 }
 
-export async function getAsambleasAbiertas(clienteId: string) {
-  const asambleas = await prisma.asamblea.findMany({
+export async function getOpenAssemblies(condominiumId: string) {
+  
+  const assemblies = await prisma.assembly.findMany({
     where: {
-      clienteId,
-      estado: 'ABIERTA',
+      condominiumId,
+      status: 'ABIERTA',
       deletedAt: null,
     },
     orderBy: {
-      fecha: 'desc',
+      date: 'desc',
     },
     select: {
       id: true,
-      titulo: true,
-      fecha: true,
-      estado: true,
+      title: true,
+      date: true,
+      status: true,
     },
   })
 
-  return asambleas
+  return assemblies.map((a) => ({
+    id: a.id,
+    titulo: a.title,
+    fecha: a.date,
+    estado: a.status,
+  }))
 }
 
-export async function buscarPersonaPorCedula(cedula: string, clienteId: string) {
-  const persona = await prisma.persona.findFirst({
+export async function searchPersonByIdNumber(idNumber: string, condominiumId: string) {
+  const person = await prisma.person.findFirst({
     where: {
-      cedula,
-      clienteId,
+      idNumber,
+      condominiumId,
       deletedAt: null,
     },
     include: {
-      personasApartamentos: {
+      personApartments: {
         where: {
-          estadoActivo: true,
+          isActive: true,
         },
         include: {
-          apartamento: {
+          apartment: {
             select: {
               id: true,
-              numero: true,
-              torre: true,
-              clienteId: true,
+              number: true,
+              tower: true,
+              condominiumId: true,
             },
           },
         },
@@ -63,93 +69,106 @@ export async function buscarPersonaPorCedula(cedula: string, clienteId: string) 
     },
   })
   
-  if (!persona) {
+  if (!person) {
     return null
   }
 
-  const apartamentos: {
+  const apartments: {
     id: string
-    numero: string
-    torre: string
+    number: string
+    tower: string
   }[] = []
 
     //obtain the active apartments associated with the participating person
-      const registros_participante = await prisma.participanteAsamblea.findMany({
+      const participantRecords = await prisma.assemblyParticipant.findMany({
         where: {
-          personaId: persona.id,
-          asamblea: {
-            clienteId,
-            estado: 'ABIERTA',
+          personId: person.id,
+          assembly: {
+            condominiumId,
+            status: 'ABIERTA',
             deletedAt: null,
           },
         },
         include: {
-          apartamento: {
+          apartment: {
             select: {
               id: true,
-              numero: true,
-              torre: true,
+              number: true,
+              tower: true,
             },
           },
         },
       })
 
-      if (registros_participante.length === 0) {
+      if (participantRecords.length === 0) {
         return null
       }
       
       // Iterate over the participant records and extract the associated apartments
-      registros_participante.forEach((p) => {
-        const apartamentoParticipante = p.apartamento
-        apartamentos.push({
-          id: apartamentoParticipante.id,
-          numero: apartamentoParticipante.numero,
-          torre: apartamentoParticipante.torre,
+      participantRecords.forEach((p) => {
+        const apartmentParticipant = p.apartment
+        apartments.push({
+          id: apartmentParticipant.id,
+          number: apartmentParticipant.number,
+          tower: apartmentParticipant.tower,
         })
       })
 
 
   return {
-    id: persona.id,
-    nombre: persona.nombre,
-    cedula: persona.cedula,
-    apartamentos,
+    id: person.id,
+    nombre: person.name,
+    cedula: person.idNumber,
+    apartments: apartments.map((a) => ({
+      id: a.id,
+      numero: a.number,
+      torre: a.tower,
+    })),
   }
 }
 
-export async function getEncuestasActivas(asambleaId: string) {
-  const encuestas = await prisma.encuesta.findMany({
+export async function getActiveSurveys(assemblyId: string) {
+  const surveys = await prisma.survey.findMany({
     where: {
-      asambleaId,
-      estado: 'ACTIVA',
+      assemblyId,
+      status: 'ACTIVA',
       deletedAt: null,
     },
     include: {
-      opciones: {
+      options: {
         orderBy: {
-          orden: 'asc',
+          order: 'asc',
         },
       },
     },
     orderBy: {
-      orden: 'asc',
+      order: 'asc',
     },
   })
 
-  return encuestas
+  return surveys.map((s) => ({
+    id: s.id,
+    pregunta: s.question,
+    tipo: s.type,
+    surveyOptions: s.options.map((o) => ({
+      id: o.id,
+      texto: o.text,
+      orden: o.order,
+    })),
+  }))
 }
 
 export async function emitVote(
-  asambleaId: string,
-  apartamentoId: string,
-  encuestaId: string,
-  opcionId: string
+  assemblyId: string,
+  apartmentId: string,
+  surveyId: string,
+  optionId: string
 ) {
   // Check if vote already exists for this apartment+survey
-  const existingVote = await prisma.voto.findFirst({
+  const existingVote = await prisma.vote.findFirst({
     where: {
-      apartamentoId,
-      encuestaId,
+      apartmentId,
+      surveyId,
       deletedAt: null,
     },
   })
@@ -159,56 +178,64 @@ export async function emitVote(
   }
 
   // Create the vote
-  await prisma.voto.create({
+  await prisma.vote.create({
     data: {
-      apartamentoId,
-      encuestaId,
-      opcionId,
+      apartmentId,
+      surveyId,
+      optionId,
     },
   })
 
   return { success: true }
 }
 
-export async function getVotosByApartamento(asambleaId: string, apartamentoId: string) {
-  const votos = await prisma.voto.findMany({
+export async function getVotesByApartment(assemblyId: string, apartmentId: string) {
+  const votes = await prisma.vote.findMany({
     where: {
-      apartamentoId,
+      apartmentId,
       deletedAt: null,
     },
     select: {
-      encuestaId: true,
+      surveyId: true,
     },
   })
 
-  return votos.map((v) => v.encuestaId)
+  return votes.map((v) => v.surveyId)
 }
 
-export async function getAsamblea(asambleaId: string) {
-  const asamblea = await prisma.asamblea.findUnique({
+export async function getAssembly(assemblyId: string) {
+  console.log('Fetching assembly with ID:', assemblyId);
+  const assembly = await prisma.assembly.findUnique({
     where: {
-      id: asambleaId,
+      id: assemblyId,
     },
     select: {
       id: true,
-      titulo: true,
-      clienteId: true,
-      estado: true,
+      title: true,
+      condominiumId: true,
+      status: true,
     },
   })
 
-  return asamblea
+  if (!assembly) return null
+
+  return {
+    id: assembly.id,
+    titulo: assembly.title,
+    clienteId: assembly.condominiumId,
+    estado: assembly.status,
+  }
 }
 
-export async function getResultadosEncuesta(encuestaId: string) {
-  const opciones = await prisma.opcion.findMany({
+export async function getSurveyResults(surveyId: string) {
+  const options = await prisma.surveyOption.findMany({
     where: {
-      encuestaId,
+      surveyId,
     },
     include: {
       _count: {
         select: {
-          votos: {
+          votes: {
             where: {
               deletedAt: null,
             },
@@ -217,60 +244,61 @@ export async function getResultadosEncuesta(encuestaId: string) {
       },
     },
     orderBy: {
-      orden: 'asc',
+      order: 'asc',
     },
   })
 
-  const totalVotos = opciones.reduce((sum, op) => sum + op._count.votos, 0)
+  const totalVotes = options.reduce((sum, op) => sum + op._count.votes, 0)
 
-  return opciones.map((op) => ({
-    id: op.id,
-    texto: op.texto,
-    orden: op.orden,
-    votos: op._count.votos,
-    porcentaje: totalVotos > 0 ? Math.round((op._count.votos / totalVotos) * 100) : 0,
-  }))
+  return {
+    resultados: options.map((op) => ({
+      id: op.id,
+      texto: op.text,
+      orden: op.order,
+      votes: op._count.votes,
+      porcentaje: totalVotes > 0 ? Math.round((op._count.votes / totalVotes) * 100) : 0,
+    })),
+    totalVotes: totalVotes,
+  }
 }
 
 // Obtain the percentage of registered participants who have voted in a specific survey
-export async function getParticipationData(encuestaId: string) {
+export async function getParticipationData(surveyId: string) {
   
   // Obtain the assemblyId from the survey
-  const encuesta = await prisma.encuesta.findUnique({
+  const survey = await prisma.survey.findUnique({
     where: {
-      id: encuestaId,
+      id: surveyId,
     },
     select: {
-      asambleaId: true,
+      assemblyId: true,
     },
   })
 
-  if (!encuesta) {
+  if (!survey) {
     return null
   }
 
-  const [totalParticipantes, totalVotos] = await Promise.all([
-    prisma.participanteAsamblea.count({
-      where: { asambleaId: encuesta.asambleaId },
+  const [totalParticipants, totalVotes] = await Promise.all([
+    prisma.assemblyParticipant.count({
+      where: { assemblyId: survey.assemblyId },
     }),
-    prisma.voto.count({
-      where: { encuestaId, deletedAt: null },
+    prisma.vote.count({
+      where: { surveyId, deletedAt: null },
     })
   ]);
 
   // Case: Empty assembly (We avoid division by zero)
-  if (totalParticipantes === 0) {
+  if (totalParticipants === 0) {
     return {
-      totalParticipantes: 0,
-      totalVotos: 0,
+      totalParticipants: 0,
+      totalVotes: 0,
       totalPorcentajeParticipacion: 0,
     }
   }
-  const result = {
-    totalParticipantes,
-    totalVotos,
-    totalPorcentajeParticipacion: Math.round((totalVotos / totalParticipantes) * 100),
+  return {
+    totalParticipants: totalParticipants,
+    totalVotes: totalVotes,
+    totalPorcentajeParticipacion: Math.round((totalVotes / totalParticipants) * 100),
   }
-  return result
 }
-

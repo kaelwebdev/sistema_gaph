@@ -3,35 +3,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Users, Calendar, MessageSquare } from "lucide-react"
 
 export default async function DashboardPage() {
-  const [apartamentosCount, personasCount, asambleasCount, pqrsCount] =
+  const [apartmentsCount, personsCount, assembliesCount, pqrsCount] =
     await Promise.all([
-      prisma.apartamento.count({ where: { deletedAt: null } }),
-      prisma.persona.count({ where: { deletedAt: null } }),
-      prisma.asamblea.count({ where: { deletedAt: null } }),
-      prisma.pQRS.count({ where: { deletedAt: null } }),
+      prisma.apartment.count({ where: { deletedAt: null } }),
+      prisma.person.count({ where: { deletedAt: null } }),
+      prisma.assembly.count({ where: { deletedAt: null } }),
+      prisma.pQRSRequest.count({ where: { deletedAt: null } }),
     ])
 
   const stats = [
     {
-      title: "Apartamentos",
-      value: apartamentosCount,
+      title: "Apartments",
+      value: apartmentsCount,
       icon: Building2,
       color: "text-blue-600",
     },
     {
-      title: "Personas",
-      value: personasCount,
+      title: "Persons",
+      value: personsCount,
       icon: Users,
       color: "text-green-600",
     },
     {
-      title: "Asambleas",
-      value: asambleasCount,
+      title: "Assemblies",
+      value: assembliesCount,
       icon: Calendar,
       color: "text-purple-600",
     },
     {
-      title: "PQRS",
+      title: "PQRSRequest",
       value: pqrsCount,
       icon: MessageSquare,
       color: "text-orange-600",

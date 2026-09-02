@@ -1,6 +1,6 @@
 'use client'
 
-import { useVotosRealtime } from '@/hooks/useVotosRealtime'
+import { useVotesRealtime } from '@/hooks/useVotesRealtime'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BarChart3, RefreshCw, Loader2 } from 'lucide-react'
@@ -9,13 +9,13 @@ import { Button } from '@/components/ui/button'
 type ResultadoOpcion = {
   id: string
   texto: string
-  votos: number
+  votes: number
   porcentaje: number
 }
 
 type ResultadosData = {
   resultados: ResultadoOpcion[]
-  totalVotos: number
+  totalVotes: number
 } | null
 
 interface EncuestaConResultados {
@@ -32,7 +32,7 @@ interface ResultadosEnVivoProps {
 }
 
 export function ResultadosEnVivo({ encuestaId, pregunta, tipo }: ResultadosEnVivoProps) {
-  const { resultados, isLoading, error, isConnected, lastEvent, refetch } = useVotosRealtime(encuestaId)
+  const { resultados, isLoading, error, isConnected, lastEvent, refetch } = useVotesRealtime(encuestaId)
 
   if (isLoading) {
     return (
@@ -84,28 +84,28 @@ export function ResultadosEnVivo({ encuestaId, pregunta, tipo }: ResultadosEnViv
       <CardContent>
         {/* Render resultados as bars */}
         {resultados?.resultados ? (
-          resultados.resultados.map((opcion) => (
-            <div key={opcion.id} className="mb-3">
+          resultados.resultados.map((surveyOption) => (
+            <div key={surveyOption.id} className="mb-3">
               <div className="flex justify-between mb-1">
-                <span>{opcion.texto}</span>
+                <span>{surveyOption.texto}</span>
                 <span className="text-sm font-medium">
-                  {opcion.votos} votos ({opcion.porcentaje.toFixed(1)}%)
+                  {surveyOption.votes} votes ({surveyOption.porcentaje.toFixed(1)}%)
                 </span>
               </div>
               <div className="h-3 w-full bg-muted rounded-full">
                 <div 
                   className="h-3 bg-primary rounded-full transition-all duration-300" 
-                  style={{ width: `${opcion.porcentaje}%` }}
+                  style={{ width: `${surveyOption.porcentaje}%` }}
                 />
               </div>
             </div>
           ))
         ) : (
-          <p className="text-muted">No hay opciones disponibles.</p>
+          <p className="text-muted">No hay surveyOptions disponibles.</p>
         )}
         <div className="flex items-center justify-between mt-4 pt-4 border-t">
           <p className="text-sm text-muted">
-            Total: {resultados?.totalVotos || 0} votos
+            Total: {resultados?.totalVotes || 0} votes
           </p>
           <Button 
             variant="ghost" 

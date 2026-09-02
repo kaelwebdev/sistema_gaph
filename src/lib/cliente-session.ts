@@ -1,33 +1,33 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
-export async function getClienteIdFromSession(): Promise<string | null> {
+export async function getCondominiumIdFromSession(): Promise<string | null> {
   const session = await auth()
-  return session?.user?.clienteId ?? null
+  return session?.user?.condominiumId ?? null
 }
 
-export async function requireClienteId(): Promise<string> {
-  const clienteId = await getClienteIdFromSession()
+export async function requireCondominiumId(): Promise<string> {
+  const condominiumId = await getCondominiumIdFromSession()
   
-  if (!clienteId) {
+  if (!condominiumId) {
     redirect("/")
   }
   
-  return clienteId
+  return condominiumId
 }
 
-export async function requireAuth(): Promise<{ clienteId: string }> {
+export async function requireAuth(): Promise<{ condominiumId: string }> {
   const session = await auth()
   
   if (!session?.user?.id) {
     redirect("/login")
   }
   
-  const clienteId = session.user.clienteId
+  const condominiumId = session.user.condominiumId
   
-  if (!clienteId) {
+  if (!condominiumId) {
     redirect("/")
   }
-  
-  return { clienteId }
+
+  return { condominiumId }
 }

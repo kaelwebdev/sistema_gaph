@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { submitPQRS } from '@/lib/actions/pqrs'
+import { submitPQRS } from '@/lib/actions/pqrsRequest'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,15 +24,15 @@ function PQRSPageContent() {
     setError('')
 
     const data = {
-      tipo: formData.get('tipo') as 'PREGUNTA' | 'QUEJA' | 'RECLAMO' | 'SUGERENCIA',
-      asunto: formData.get('asunto') as string,
-      descripcion: formData.get('descripcion') as string,
-      nombreCompleto: formData.get('nombreCompleto') as string,
+      type: formData.get('tipo') as 'PREGUNTA' | 'QUEJA' | 'RECLAMO' | 'SUGERENCIA',
+      subject: formData.get('asunto') as string,
+      description: formData.get('descripcion') as string,
+      fullName: formData.get('nombreCompleto') as string,
       email: formData.get('email') as string,
-      telefono: formData.get('telefono') as string,
-      torre: formData.get('torre') as string,
-      numero: parseInt(formData.get('numero') as string),
-      clienteId: clienteId,
+      phone: formData.get('telefono') as string,
+      tower: formData.get('torre') as string,
+      number: parseInt(formData.get('numero') as string),
+      condominiumId: clienteId,
     }
 
     const result = await submitPQRS(data)
@@ -58,7 +58,7 @@ function PQRSPageContent() {
             </div>
             <h2 className="text-2xl font-bold text-green-600 mb-2">¡Solicitud Enviada!</h2>
             <p className="text-gray-600 mb-6">
-              Tu PQRS ha sido registrado exitosamente. Te contactaremos pronto.
+              Tu PQRSRequest ha sido registrado exitosamente. Te contactaremos pronto.
             </p>
             <Button onClick={() => router.push('/')}>
               Volver al inicio
@@ -80,7 +80,7 @@ function PQRSPageContent() {
           >
             ← Volver
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">PQRS</h1>
+          <h1 className="text-3xl font-bold text-gray-900">PQRSRequest</h1>
           <p className="text-gray-600 mt-2">
             Envíanos tu petición, queja, reclamo, sugerencia
           </p>
@@ -145,7 +145,7 @@ function PQRSPageContent() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="numero">Apartamento *</Label>
+                  <Label htmlFor="numero">Apartment *</Label>
                   <Input 
                     id="numero" 
                     name="numero" 

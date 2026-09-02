@@ -1,122 +1,122 @@
 
-> **Nota**: La base de datos es PostgreSQL en Supabase. Las tablas incluyen soft deletes (`deletedAt`) para compatibilidad con el backend de Supabase.
+> **Note**: The database is PostgreSQL in Supabase. Tables include soft deletes (`deletedAt`) for compatibility with the Supabase backend.
 
-### Entity-relationship diagram
+### Entity-Relationship Diagram
 
 ```mermaid
 erDiagram
-    Cliente ||--o{ Apartamento : tiene
-    Cliente ||--o{ Persona : tiene
-    Cliente ||--o{ Asamblea : celebra
-    Cliente ||--o{ Comunicado : publica
-    Cliente ||--o{ PQRS : recibe
-    Cliente ||--o{ User : administra
+    Condominium ||--o{ Apartment : has
+    Condominium ||--o{ Person : has
+    Condominium ||--o{ Assembly : holds
+    Condominium ||--o{ Announcement : publishes
+    Condominium ||--o{ PQRSRequest : receives
+    Condominium ||--o{ User : manages
 
-    User ||--o{ Account : tiene
-    User ||--o{ Session : tiene
+    User ||--o{ Account : has
+    User ||--o{ Session : has
 
-    Persona ||--o{ PersonaApartamento : habita
-    Apartamento ||--o{ PersonaApartamento : tiene
-    Apartamento ||--o{ ParticipanteAsamblea : representa
-    Apartamento ||--o{ Voto : emite
-    Apartamento ||--o{ PQRS : registra
+    Person ||--o{ PersonApartment : inhabits
+    Apartment ||--o{ PersonApartment : has
+    Apartment ||--o{ AssemblyParticipant : represents
+    Apartment ||--o{ Vote : casts
+    Apartment ||--o{ PQRSRequest : registers
 
-    Asamblea ||--o{ Encuesta : tiene
-    Asamblea ||--o{ ParticipanteAsamblea : tiene
-    Persona ||--o{ ParticipanteAsamblea : participa
+    Assembly ||--o{ Survey : has
+    Assembly ||--o{ AssemblyParticipant : has
+    Person ||--o{ AssemblyParticipant : participates
 
-    Encuesta ||--o{ Opcion : tiene
-    Encuesta ||--o{ Voto : recibe
-    Opcion ||--o{ Voto : recibe
+    Survey ||--o{ SurveyOption : has
+    Survey ||--o{ Vote : receives
+    SurveyOption ||--o{ Vote : receives
 
-    Apartamento {
+    Apartment {
         string id PK
-        string numero
-        string torre
-        int nivel
-        EstadoApartamento estado
-        string observaciones
-        int habitantes
-        string clienteId FK
+        string number
+        string tower
+        int level
+        ApartmentStatus status
+        string observations
+        int inhabitants
+        string condominiumId FK
     }
 
-    Persona {
+    Person {
         string id PK
-        string nombre
-        string cedula
-        string telefono
+        string name
+        string idNumber
+        string phone
         string email
-        string clienteId FK
+        string condominiumId FK
     }
 
-    PersonaApartamento {
+    PersonApartment {
         string id PK
-        RolPersona rol
-        boolean estadoActivo
-        string personaId FK
-        string apartamentoId FK
+        PersonRole role
+        boolean isActive
+        string personId FK
+        string apartmentId FK
     }
 
-    Asamblea {
+    Assembly {
         string id PK
-        string titulo
-        datetime fecha
-        EstadoAsamblea estado
-        string clienteId FK
+        string title
+        datetime date
+        AssemblyStatus status
+        string condominiumId FK
     }
 
-    ParticipanteAsamblea {
+    AssemblyParticipant {
         string id PK
-        TipoParticipante tipo
-        string asambleaId FK
-        string apartamentoId FK
-        string personaId FK
+        ParticipantType type
+        string assemblyId FK
+        string apartmentId FK
+        string personId FK
     }
 
-    Encuesta {
+    Survey {
         string id PK
-        string pregunta
-        int orden
-        EstadoEncuesta estado
-        TipoEncuesta tipo
-        string asambleaId FK
+        string question
+        int order
+        SurveyStatus status
+        SurveyType type
+        string assemblyId FK
     }
 
-    Opcion {
+    SurveyOption {
         string id PK
-        string texto
-        int orden
-        string encuestaId FK
+        string text
+        int order
+        string surveyId FK
     }
 
-    Voto {
+    Vote {
         string id PK
-        string apartamentoId FK
-        string opcionId FK
-        string encuestaId FK
+        string apartmentId FK
+        string optionId FK
+        string surveyId FK
     }
 
-    Comunicado {
+    Announcement {
         string id PK
-        string titulo
-        text contenido
-        datetime fechaPublicacion
-        string clienteId FK
+        string title
+        text content
+        datetime publishedAt
+        string condominiumId FK
     }
 
-    PQRS {
+    PQRSRequest {
         string id PK
-        TipoPQRS tipo
-        string asunto
-        text descripcion
-        string nombreCompleto
+        PQRSType type
+        string subject
+        text description
+        string fullName
         string email
-        string telefono
-        string torre
-        int numero
-        EstadoPQRS estado
-        string clienteId FK
-        string apartamentoId FK
+        string phone
+        string tower
+        int number
+        PQRSStatus status
+        string condominiumId FK
+        string apartmentId FK
     }
 
     User {
@@ -129,7 +129,7 @@ erDiagram
         Role role
         datetime createdAt
         datetime updatedAt
-        string clienteId FK
+        string condominiumId FK
     }
 
     Account {
@@ -154,7 +154,7 @@ erDiagram
         datetime expires
     }
 
-    Verification_Token {
+    VerificationToken {
         string identifier
         string token UK
         datetime expires

@@ -13,11 +13,11 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/apartamentos", label: "Apartamentos", icon: Building2 },
-  { href: "/personas", label: "Personas", icon: Users },
-  { href: "/asambleas", label: "Asambleas", icon: Calendar },
-  { href: "/comunicados", label: "Comunicados", icon: Megaphone },
-  { href: "/pqrs", label: "PQRS", icon: MessageSquare },
+  { href: "/apartments", label: "Apartments", icon: Building2 },
+  { href: "/persons", label: "Persons", icon: Users },
+  { href: "/assemblies", label: "Assemblies", icon: Calendar },
+  { href: "/announcements", label: "Announcements", icon: Megaphone },
+  { href: "/pqrsrequest", label: "PQRSRequest", icon: MessageSquare },
 ]
 
 export default async function AdminLayout({

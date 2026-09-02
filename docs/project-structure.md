@@ -5,21 +5,21 @@ src/
 ├── app/
 │   ├── (admin)/         # Rutas del panel de administración (protegidas)
 │   │   ├── dashboard/   # Dashboard principal
-│   │   ├── personas/    # Gestión de personas (CRUD)
-│   │   │   └── [id]/    # Editar persona
-│   │   ├── apartamentos/ # Gestión de apartamentos (CRUD)
-│   │   │   └── [id]/    # Editar apartamento
-│   │   ├── asambleas/   # Gestión de asambleas y encuestas
+│   │   ├── persons/    # Gestión de personas (CRUD)
+│   │   │   └── [id]/    # Editar person
+│   │   ├── apartments/ # Gestión de apartments (CRUD)
+│   │   │   └── [id]/    # Editar apartment
+│   │   ├── assemblies/   # Gestión de assemblies y encuestas
 │   │   │   └── [id]/
 │   │   │       └── resultados/ # Página de resultados
-│   │   ├── comunicados/ # Gestión de comunicados
-│   │   └── pqrs/        # Lista y gestión de PQRS
+│   │   ├── announcements/ # Gestión de announcements
+│   │   └── pqrsRequest/        # Lista y gestión de PQRSRequest
 │   ├── (public)/        # Rutas públicas
 │   │   ├── page.tsx    # Landing page con selector de unidad
 │   │   ├── unidad/     # Portal por unidad residencial
 │   │   ├── votar/     # Sistema de votación público
-│   │   │   └── [asambleaId]/ # Votación por asamblea
-│   │   └── contacto/   # Formulario público de PQRS
+│   │   │   └── [assemblieId]/ # Votación por assemblie
+│   │   └── contacto/   # Formulario público de PQRSRequest
 │   ├── login/          # Página de login
 │   ├── api/            # API routes (auth, etc.)
 │   └── page.tsx        # Redirect raíz

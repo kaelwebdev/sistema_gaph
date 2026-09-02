@@ -1,44 +1,44 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { buscarPersonaPorCedula } from '@/lib/actions/public'
+import { searchPersonByIdNumber } from '@/lib/actions/public'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 
-interface Apartamento {
+interface Apartment {
   id: string
   numero: string
   torre: string
 }
 
-interface Persona {
+interface Person {
   id: string
   nombre: string
   cedula: string
-  apartamentos: Apartamento[]
+  apartments: Apartment[]
 }
 
 interface IdentificacionPanelProps {
   clienteId: string
-  onIdentified: (persona: Persona, apartamento: Apartamento) => void
+  onIdentified: (person: Person, apartment: Apartment) => void
 }
 
 export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionPanelProps) {
   const [cedula, setCedula] = useState('')
-  const [persona, setPersona] = useState<Persona | null>(null)
-  const [apartamentos, setApartamentos] = useState<Apartamento[]>([])
+  const [person, setPersona] = useState<Person | null>(null)
+  const [apartments, setApartments] = useState<Apartment[]>([])
   const [torresDisponibles, setTorresDisponibles] = useState<string[]>([])
   const [torreSeleccionada, setTorreSeleccionada] = useState<string>('')
-  const [apartamentoSeleccionado, setApartamentoSeleccionado] = useState<Apartamento | null>(null)
+  const [apartmentSeleccionado, setApartmentSeleccionado] = useState<Apartment | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
   // Extract unique towers when apartments change
   useEffect(() => {
-    if (apartamentos.length > 0) {
-      const torres = [...new Set(apartamentos.map((apt) => apt.torre))].sort()
+    if (apartments.length > 0) {
+      const torres = [...new Set(apartments.map((apt) => apt.torre))].sort()
       setTorresDisponibles(torres)
       
       // Auto-select first tower if only one
@@ -46,7 +46,7 @@ export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionP
         setTorreSeleccionada(torres[0])
       }
     }
-  }, [apartamentos, torreSeleccionada])
+  }, [apartments, torreSeleccionada])
 
   const handleBuscar = async () => {
     if (!cedula.trim()) {
@@ -57,25 +57,25 @@ export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionP
     setIsLoading(true)
     setError('')
     setPersona(null)
-    setApartamentos([])
+    setApartments([])
     setTorreSeleccionada('')
-    setApartamentoSeleccionado(null)
+    setApartmentSeleccionado(null)
 
     try {
-      const result = await buscarPersonaPorCedula(cedula.trim(), clienteId)
+      const result = await searchPersonByIdNumber(cedula.trim(), clienteId)
       
       if (!result) {
         setError('Cédula no encontrada. Verifica tus datos.')
         return
       }
 
-      if (result.apartamentos.length === 0) {
-        setError('Esta persona no tiene apartamentos registrados.')
+      if (result.apartments.length === 0) {
+        setError('Esta person no tiene apartments registrados.')
         return
       }
 
       setPersona(result)
-      setApartamentos(result.apartamentos)
+      setApartments(result.apartments)
     } catch (err) {
       console.error('Error searching person:', err)
       setError('Error al buscar. Intenta de nuevo.')
@@ -91,25 +91,25 @@ export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionP
   }
 
   // Filter apartments by selected tower
-  const apartamentosFiltrados = torreSeleccionada
-    ? apartamentos.filter((apt) => apt.torre === torreSeleccionada)
+  const apartmentsFiltrados = torreSeleccionada
+    ? apartments.filter((apt) => apt.torre === torreSeleccionada)
     : []
 
-  const handleApartamentoChange = (apartamentoId: string) => {
-    const selected = apartamentosFiltrados.find((apt) => apt.id === apartamentoId)
-    setApartamentoSeleccionado(selected || null)
+  const handleApartmentChange = (apartmentId: string) => {
+    const selected = apartmentsFiltrados.find((apt) => apt.id === apartmentId)
+    setApartmentSeleccionado(selected || null)
   }
 
   const handleContinuar = () => {
-    if (persona && apartamentoSeleccionado) {
-      onIdentified(persona, apartamentoSeleccionado)
+    if (person && apartmentSeleccionado) {
+      onIdentified(person, apartmentSeleccionado)
     }
   }
 
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="text-lg">Identificación del Participante</CardTitle>
+        <CardTitle className="text-lg">Identificación del Participant</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Cédula Input */}
@@ -139,12 +139,12 @@ export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionP
           </div>
         )}
 
-        {/* Persona Found - Show Selection */}
-        {persona && apartamentos.length > 0 && (
+        {/* Person Found - Show Selection */}
+        {person && apartments.length > 0 && (
           <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
             <div className="border-b pb-3">
-              <p className="font-medium">{persona.nombre}</p>
-              <p className="text-sm text-muted-foreground">Cédula: {persona.cedula}</p>
+              <p className="font-medium">{person.nombre}</p>
+              <p className="text-sm text-muted-foreground">Cédula: {person.cedula}</p>
             </div>
 
             {/* Tower Selection */}
@@ -156,7 +156,7 @@ export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionP
                   value={torreSeleccionada}
                   onChange={(e) => {
                     setTorreSeleccionada(e.target.value)
-                    setApartamentoSeleccionado(null)
+                    setApartmentSeleccionado(null)
                   }}
                 >
                   <option value="">-- Selecciona una torre --</option>
@@ -172,14 +172,14 @@ export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionP
             {/* Apartment Selection */}
             {torreSeleccionada && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Selecciona tu apartamento:</label>
+                <label className="text-sm font-medium">Selecciona tu apartment:</label>
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={apartamentoSeleccionado?.id || ''}
-                  onChange={(e) => handleApartamentoChange(e.target.value)}
+                  value={apartmentSeleccionado?.id || ''}
+                  onChange={(e) => handleApartmentChange(e.target.value)}
                 >
-                  <option value="">-- Selecciona un apartamento --</option>
-                  {apartamentosFiltrados.map((apt) => (
+                  <option value="">-- Selecciona un apartment --</option>
+                  {apartmentsFiltrados.map((apt) => (
                     <option key={apt.id} value={apt.id}>
                       Apto {apt.numero}
                     </option>
@@ -189,7 +189,7 @@ export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionP
             )}
 
             {/* Continue Button */}
-            {apartamentoSeleccionado && (
+            {apartmentSeleccionado && (
               <Button 
                 className="w-full" 
                 onClick={handleContinuar}
@@ -201,7 +201,7 @@ export function IdentificacionPanel({ clienteId, onIdentified }: IdentificacionP
         )}
 
         {/* Instructions */}
-        {!persona && !error && (
+        {!person && !error && (
           <p className="text-sm text-muted-foreground">
             Ingresa tu número de cédula para identificarte y poder participar en la votación.
           </p>
