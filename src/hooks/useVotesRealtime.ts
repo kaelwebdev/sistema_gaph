@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { createClient, type RealtimeChannel } from '@supabase/supabase-js'
+import { type RealtimeChannel } from '@supabase/supabase-js'
 import { getSurveyResults } from '@/lib/actions/public'
 import { env } from '@/lib/env'
+import { getSupabaseClient } from '@/lib/supabase-client'
 
-const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL!
-const supabasePublishableKey = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
 
-const supabase = createClient(supabaseUrl, supabasePublishableKey)
+const supabase = getSupabaseClient()
 
 type ResultadosData = {
   resultados: { id: string; texto: string; orden: number; votes: number; porcentaje: number }[]
@@ -54,14 +53,19 @@ export function useVotesRealtime(encuestaId: string) {
     channel.on(
       'postgres_changes' as any,
       {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'Vote',
+        filter: `surveyId=eq.${encuestaId}`,
       },
       (payload: any) => {
-        console.log('[Realtime] 📡 Cambio detectado en Vote:', payload.event, payload)
-        
-        setLastEvent(`${payload.event} at ${new Date().toLocaleTimeString()}`)
+       console.log(`[Realtime - ${encuestaId}] 📡 Evento recibido:`, payload)
+        const votoFecha = payload.new?.createdAt
+          ? new Date(payload.new.createdAt).toLocaleTimeString()
+          : "sin fecha"//new Date().toLocaleTimeString()
+
+        // 2. Formato descriptivo específico con el ID o la hora exacta del registro
+        setLastEvent(`Voto recibido a las ${votoFecha}`)
         
         if (fetchResultadosRef.current) {
           fetchResultadosRef.current()

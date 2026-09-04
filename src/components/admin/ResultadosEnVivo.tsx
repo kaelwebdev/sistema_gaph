@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BarChart3, RefreshCw, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
+import { getParticipationData } from '@/lib/actions/public'
+import { useState } from 'react'
+import React from 'react'
 type ResultadoOpcion = {
   id: string
   texto: string
@@ -31,8 +33,28 @@ interface ResultadosEnVivoProps {
   tipo: string
 }
 
-export function ResultadosEnVivo({ encuestaId, pregunta, tipo }: ResultadosEnVivoProps) {
+interface ParticipationData {
+  totalParticipants: number,
+  totalVotes: number,
+  totalPorcentajeParticipacion: number
+}
+
+export const ResultadosEnVivo = React.memo( function ResultadosEnVivo({ encuestaId, pregunta, tipo }: ResultadosEnVivoProps) {
   const { resultados, isLoading, error, isConnected, lastEvent, refetch } = useVotesRealtime(encuestaId)
+  const [participationData, setParticipationData] = useState<ParticipationData | null>(null)
+  const getParticipationOfSurvey = async () => {
+      try {
+        
+        const participationData = await getParticipationData(encuestaId)
+        setParticipationData(participationData)
+      } catch (err) {
+        console.error('Error when loading results:', err)
+      } finally {
+        
+      }
+  }
+  
+
 
   if (isLoading) {
     return (
@@ -103,10 +125,22 @@ export function ResultadosEnVivo({ encuestaId, pregunta, tipo }: ResultadosEnViv
         ) : (
           <p className="text-muted">No hay surveyOptions disponibles.</p>
         )}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t">
-          <p className="text-sm text-muted">
+        <div className="flex flex-wrap items-center justify-between mt-4 pt-4 border-t">
+          <p className="text-sm ">
             Total: {resultados?.totalVotes || 0} votes
           </p>
+          {resultados?.resultados && participationData && (
+            <div className="space-y-3">
+              <p className={`text-md font-medium ${
+                participationData.totalPorcentajeParticipacion > 50 
+                  ? 'text-green-600' 
+                  : 'text-red-600'
+              }`}>
+                ({participationData.totalVotes}/{participationData.totalParticipants}) 
+                 {participationData.totalPorcentajeParticipacion}% de participants han votado
+              </p>
+            </div>
+          )}
           <Button 
             variant="ghost" 
             size="sm"
@@ -115,8 +149,16 @@ export function ResultadosEnVivo({ encuestaId, pregunta, tipo }: ResultadosEnViv
             <RefreshCw className="w-4 h-4 mr-1" />
             Actualizar
           </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={getParticipationOfSurvey}
+          >
+            <RefreshCw className="w-4 h-4 mr-1" />
+            Quórum
+          </Button>
         </div>
       </CardContent>
     </Card>
   )
-}
+})
