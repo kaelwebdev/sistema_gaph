@@ -128,7 +128,7 @@ function VotingContent({
     return (
       <div className="container mx-auto max-w-2xl px-4 py-8">
         {/* Header with participant info */}
-        <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Votación</h1>
             <p className="text-sm text-muted-foreground">
@@ -136,7 +136,7 @@ function VotingContent({
               {state.apartmentActual!.numero}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"

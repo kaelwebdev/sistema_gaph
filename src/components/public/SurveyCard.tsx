@@ -112,7 +112,7 @@ export function EncuestaCard({ encuesta, apartmentId, onVoted, hasVoted }: Encue
   return (
     <Card className="mb-4">
       <CardHeader>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <CardTitle className="text-base font-semibold leading-tight">
             {encuesta.pregunta}
           </CardTitle>

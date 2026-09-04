@@ -44,7 +44,7 @@ export default function UnidadPage() {
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between">
         <h1 className="text-2xl font-bold">Assemblies Disponibles</h1>
         <button
           onClick={handleVolver}
@@ -60,7 +60,7 @@ export default function UnidadPage() {
         </div>
       ) : assemblies.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
+          <CardContent className="flex flex-wrap py-12 text-center">
             <p className="text-muted-foreground">
               No hay assemblies abiertas en este momento.
             </p>
