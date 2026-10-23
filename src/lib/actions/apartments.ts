@@ -73,6 +73,13 @@ export async function getApartments(condominiumId: string) {
     orderBy: [{ tower: 'asc' }, { number: 'asc' }],
   })
 }
+  
+export async function searchApartment(tower: string, number: string, condominiumId: string) {
+  return prisma.apartment.findFirst({
+    where: { tower, number, condominiumId, deletedAt: null },
+    orderBy: [{ tower: 'asc' }, { number: 'asc' }],
+  })
+}
 
 export async function submitApartmentForm(id: string, formData: FormData) {
   const result = await updateApartment(id, {

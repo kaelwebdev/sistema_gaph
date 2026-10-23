@@ -21,6 +21,8 @@
 
 # production
 /build
+backupprueba
+/supabase/.temp
 
 # misc
 .DS_Store
