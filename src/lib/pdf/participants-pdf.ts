@@ -5,6 +5,23 @@ import {
   type PDFFont,
   type PDFPage,
 } from 'pdf-lib'
+import {
+  BORDER_COLOR,
+  BOTTOM_LIMIT,
+  HEADER_FILL,
+  MARGIN,
+  PAGE_HEIGHT,
+  PAGE_WIDTH,
+  TEXT_COLOR,
+  drawContinuationHeader,
+  drawDocumentHeader,
+  drawFooter,
+  fitText,
+  formatDateTime,
+  sanitizePdfText,
+} from './common'
+
+export { sanitizePdfText }
 
 export interface ParticipantsPdfAssembly {
   title: string
@@ -24,10 +41,6 @@ export interface ParticipantsPdfInput {
   participants: ParticipantsPdfParticipant[]
 }
 
-const PAGE_WIDTH = 595.28
-const PAGE_HEIGHT = 841.89
-const MARGIN = 48
-const BOTTOM_LIMIT = 70
 const ROW_HEIGHT = 20
 const HEADER_ROW_HEIGHT = 20
 const CELL_PADDING = 4
@@ -83,45 +96,6 @@ const COLUMNS: TableColumn[] = [
 
 const TABLE_WIDTH = COLUMNS.reduce((total, column) => total + column.width, 0)
 
-const SMART_PUNCTUATION: ReadonlyArray<readonly [RegExp, string]> = [
-  [/[\u2018\u2019]/g, "'"],
-  [/[\u201C\u201D]/g, '"'],
-  [/[\u2013\u2014]/g, '-'],
-  [/\u2026/g, '...'],
-  [/\u00A0/g, ' '],
-]
-
-const WINANSI_UNSUPPORTED = new Set([0x81, 0x8d, 0x8f, 0x90, 0x9d])
-
-function isWinAnsiSupported(codePoint: number): boolean {
-  // Control characters have no WinAnsi glyph: pdf-lib throws when encoding them.
-  if (codePoint < 0x20 || codePoint === 0x7f) return false
-
-  return codePoint <= 0xff && !WINANSI_UNSUPPORTED.has(codePoint)
-}
-
-/**
- * Fits arbitrary user text into the WinAnsi encoding used by the standard
- * PDF fonts: smart punctuation is normalized, and anything else the encoding
- * cannot represent becomes a question mark.
- */
-export function sanitizePdfText(value: string): string {
-  let normalized = value
-
-  for (const [pattern, replacement] of SMART_PUNCTUATION) {
-    normalized = normalized.replace(pattern, replacement)
-  }
-
-  let sanitized = ''
-
-  for (const character of normalized) {
-    const codePoint = character.codePointAt(0) ?? 0
-    sanitized += isWinAnsiSupported(codePoint) ? character : '?'
-  }
-
-  return sanitized
-}
-
 function compareStrings(a: string, b: string): number {
   if (a < b) return -1
   if (a > b) return 1
@@ -150,36 +124,6 @@ function compareParticipants(
   )
 }
 
-function fitText(text: string, font: PDFFont, size: number, maxWidth: number): string {
-  const sanitized = sanitizePdfText(text)
-
-  if (font.widthOfTextAtSize(sanitized, size) <= maxWidth) {
-    return sanitized
-  }
-
-  const ellipsis = '...'
-  let truncated = sanitized
-
-  while (
-    truncated.length > 0 &&
-    font.widthOfTextAtSize(truncated + ellipsis, size) > maxWidth
-  ) {
-    truncated = truncated.slice(0, -1)
-  }
-
-  return truncated + ellipsis
-}
-
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('es-CO', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
-}
-
 function drawTableHeader(
   page: PDFPage,
   top: number,
@@ -190,7 +134,7 @@ function drawTableHeader(
     y: top - HEADER_ROW_HEIGHT,
     width: TABLE_WIDTH,
     height: HEADER_ROW_HEIGHT,
-    color: rgb(0.93, 0.94, 0.95),
+    color: HEADER_FILL,
   })
 
   let x = MARGIN
@@ -201,7 +145,7 @@ function drawTableHeader(
       y: top - HEADER_ROW_HEIGHT + 6,
       size: 9,
       font: boldFont,
-      color: rgb(0.15, 0.17, 0.2),
+      color: TEXT_COLOR,
     })
     x += column.width
   }
@@ -210,33 +154,10 @@ function drawTableHeader(
     start: { x: MARGIN, y: top - HEADER_ROW_HEIGHT },
     end: { x: MARGIN + TABLE_WIDTH, y: top - HEADER_ROW_HEIGHT },
     thickness: 0.5,
-    color: rgb(0.8, 0.82, 0.85),
+    color: BORDER_COLOR,
   })
 
   return top - HEADER_ROW_HEIGHT
-}
-
-function drawFooter(page: PDFPage, regularFont: PDFFont, pageNumber: number, totalPages: number): void {
-  const footerSize = 8
-  const footerColor = rgb(0.45, 0.48, 0.52)
-  const leftText = sanitizePdfText(`Generado el ${formatDate(new Date())}`)
-  const rightText = sanitizePdfText(`Página ${pageNumber} de ${totalPages}`)
-
-  page.drawText(leftText, {
-    x: MARGIN,
-    y: 32,
-    size: footerSize,
-    font: regularFont,
-    color: footerColor,
-  })
-
-  page.drawText(rightText, {
-    x: PAGE_WIDTH - MARGIN - regularFont.widthOfTextAtSize(rightText, footerSize),
-    y: 32,
-    size: footerSize,
-    font: regularFont,
-    color: footerColor,
-  })
 }
 
 export async function buildParticipantsPdf(input: ParticipantsPdfInput): Promise<Uint8Array> {
@@ -244,47 +165,18 @@ export async function buildParticipantsPdf(input: ParticipantsPdfInput): Promise
   const pdfDoc = await PDFDocument.create()
   const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica)
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  const fonts = { regular: regularFont, bold: boldFont }
 
   const sortedParticipants = [...participants].sort(compareParticipants)
 
   let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-  let y = PAGE_HEIGHT - MARGIN
 
-  if (assembly.condominiumName) {
-    page.drawText(sanitizePdfText(assembly.condominiumName), {
-      x: MARGIN,
-      y: y - 11,
-      size: 11,
-      font: regularFont,
-      color: rgb(0.42, 0.45, 0.5),
-    })
-    y -= 18
-  }
-
-  page.drawText(fitText(assembly.title, boldFont, 18, TABLE_WIDTH), {
-    x: MARGIN,
-    y: y - 18,
-    size: 18,
-    font: boldFont,
+  let y = drawDocumentHeader(page, PAGE_HEIGHT - MARGIN, fonts, {
+    condominiumName: assembly.condominiumName,
+    title: assembly.title,
+    subtitle: `${formatDateTime(assembly.date)} · ${STATUS_LABELS[assembly.status] ?? assembly.status}`,
+    meta: `Total de participantes: ${sortedParticipants.length}`,
   })
-  y -= 26
-
-  const dateLine = `${formatDate(assembly.date)} · ${STATUS_LABELS[assembly.status] ?? assembly.status}`
-  page.drawText(fitText(dateLine, regularFont, 10, TABLE_WIDTH), {
-    x: MARGIN,
-    y: y - 10,
-    size: 10,
-    font: regularFont,
-  })
-  y -= 16
-
-  page.drawText(sanitizePdfText(`Total de participantes: ${sortedParticipants.length}`), {
-    x: MARGIN,
-    y: y - 10,
-    size: 10,
-    font: regularFont,
-  })
-  y -= 22
 
   y = drawTableHeader(page, y, boldFont)
 
@@ -300,15 +192,7 @@ export async function buildParticipantsPdf(input: ParticipantsPdfInput): Promise
     sortedParticipants.forEach((participant, index) => {
       if (y - ROW_HEIGHT < BOTTOM_LIMIT) {
         page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-        y = PAGE_HEIGHT - MARGIN
-
-        page.drawText(fitText(assembly.title, boldFont, 11, TABLE_WIDTH), {
-          x: MARGIN,
-          y: y - 11,
-          size: 11,
-          font: boldFont,
-        })
-        y -= 24
+        y = drawContinuationHeader(page, fonts, assembly.title)
 
         y = drawTableHeader(page, y, boldFont)
       }
