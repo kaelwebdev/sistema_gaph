@@ -11,11 +11,12 @@ export default defineConfig({
     include: [
       'tests/schemas/*.test.ts',
       'tests/actions/*.test.ts',
+      'tests/lib/*.test.ts',
     ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/lib/schemas/**/*.ts', 'src/lib/actions/**/*.ts'],
+      include: ['src/lib/schemas/**/*.ts', 'src/lib/actions/**/*.ts', 'src/lib/pdf/**/*.ts'],
       exclude: ['src/lib/actions/index.ts'],
     },
   },
