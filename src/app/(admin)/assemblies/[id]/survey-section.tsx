@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { createSurvey, createSurveyOption, deleteSurvey, updateSurvey } from '@/lib/actions'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Trash2, Lock, Unlock } from 'lucide-react'
+import { Plus, Trash2, Lock, Unlock, FileDown } from 'lucide-react'
 
 interface Option {
   id: string
@@ -81,10 +81,20 @@ export function EncuestasSection({ assemblyId, encuestas }: Props) {
         <h2 className="text-lg font-semibold">
           {encuestas.length} Survey{encuestas.length !== 1 && 's'}
         </h2>
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Survey
-        </Button>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/assemblies/${assemblyId}/surveys/pdf`}
+            className={buttonVariants({ variant: 'outline' })}
+            download
+          >
+            <FileDown className="h-4 w-4" />
+            Descargar PDF
+          </a>
+          <Button onClick={() => setShowForm(!showForm)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Survey
+          </Button>
+        </div>
       </div>
 
       {showForm && (
