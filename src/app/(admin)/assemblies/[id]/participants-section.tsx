@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { createParticipant, deleteParticipant } from '@/lib/actions'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Trash2, User, Building2 } from 'lucide-react'
+import { FileDown, Plus, Trash2, User, Building2 } from 'lucide-react'
 
 interface Participant {
   id: string
@@ -53,10 +53,20 @@ export function ParticipantsSection({ assemblyId, participants }: Props) {
         <h2 className="text-lg font-semibold">
           Participantes
         </h2>
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Agregar Participante
-        </Button>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/assemblies/${assemblyId}/participants/pdf`}
+            className={buttonVariants({ variant: 'outline' })}
+            download
+          >
+            <FileDown className="h-4 w-4" />
+            Descargar PDF
+          </a>
+          <Button onClick={() => setShowForm(!showForm)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar Participante
+          </Button>
+        </div>
       </div>
 
       {showForm && (
